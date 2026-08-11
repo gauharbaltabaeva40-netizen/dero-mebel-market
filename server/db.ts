@@ -90,3 +90,35 @@ export async function getUserByOpenId(openId: string) {
 }
 
 // TODO: add feature queries here as your schema grows.
+
+import { InsertLead, leads } from "../drizzle/schema";
+
+/** Insert a new lead, return its id. */
+export async function createLeadRow(lead: InsertLead): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(leads).values(lead);
+  return (result[0] as { insertId: number }).insertId;
+}
+
+/** Escalation: mark lead as needing human, or create an escalation-only lead record. */
+export async function notifyManagerRow(input: {
+  leadId?: number;
+  name?: string;
+  phone?: string;
+  reason: string;
+}): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  if (input.leadId) {
+    await db.update(leads).set({ needsHuman: true, humanReason: input.reason }).where(eq(leads.id, input.leadId));
+    return input.leadId;
+  }
+  return createLeadRow({
+    name: input.name,
+    phone: input.phone,
+    notes: input.reason,
+    needsHuman: true,
+    humanReason: input.reason,
+  });
+}
