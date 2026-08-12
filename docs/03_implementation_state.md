@@ -128,3 +128,71 @@ User chose option 3: build a fully hand-made rule-based assistant (0 API calls, 
 - Screenshots: homepage + catalog OK. Known cosmetic: homepage hero text "Жұмыс істейтін ас үй. Тұратын шкаф" — slightly odd hero copy, acceptable placeholder.
 - Leads from smoke tests: ids 90001, 90003 (test artifacts; fine).
 - TODO remaining: final checkpoint + deliver.
+
+## Phase 6 progress — screenshot findings (before compaction)
+
+DONE so far: yellow accent theme in index.css (--swiss-yellow #d9a414, swiss-square/text/bg/border mapped to yellow); header centered branding "DERO MEBEL MARKET" with yellow square logo (yellow in "Mebel" part); nav centered under branding; hero redesigned: centered, no image, new KK/RU copy (Ас үйіңіз — ең басты бөлме. / Біз оны мықты етеміз.); intro/categories/advantages/steps centered; product page has yellow accents; FAQ branded header works.
+
+REMAINING cosmetic issues spotted in full-page screenshots:
+1. Catalog page: last product card (id 14, "Премиум — Классикалық гардероб"?) shows EMPTY GREY placeholder image (src missing/broken). Fix: check products seed images, replace broken img src.
+2. Product page id 8: dimensions show "3 см × 2 см × 1 см" — absurd mock dimensions; fix seed data with realistic dimensions (e.g., kitchen 240×60×220 см format).
+3. Catalog filter sidebar max 500000 ₸ slider — fine.
+4. Home steps section: black bg with yellow numbers — looks good.
+5. FAQ page: accordion items look fine but could center content; acceptable.
+6. Catalog grid last card grey box — must fix (image URL broken for that product row).
+7. Consider centering catalog page heading block left is ok (standard). Keep.
+8. Stats strip on home: fine.
+
+Note: product photos are Unsplash URLs seeded in DB via scripts/seed-db.mjs.
+
+## Findings 2 (product id 14 page)
+- Product 14 photo (photo-1616627547584) shows a chair — not a wardrobe. Replace with a wardrobe photo URL.
+- Dimensions render "3 см × 2 см × 1 см" → Product page formats widthMm/heightMm/depthMm dividing by 1000 (meters) but shows "см" label with mm/1000 values = wrong. Fix: either divide by 10 (mm→cm) or label as "мм". WidthMm=2800mm → 280 см. Fix Product.tsx formatting: mm/10 → cm.
+- Grey card in catalog grid: product 14's image loaded in later screenshot, so the grey box in first full-page shot was lazy-load moment. BUT chair photo is still contextually wrong — replace seed photoUrl for product 14 with a real wardrobe image.
+- All Unsplash URLs return HTTP 200 (browser check may differ due to hotlinking; screenshots showed them loading).
+
+## Fix plan
+1. UPDATE products SET photoUrl = 'https://images.unsplash.com/photo-1558997519-83ea9252edf8?w=1200&q=80' ... actually pick: wardrobe photo for id 14 e.g. https://images.unsplash.com/photo-1595515106969-1ce29566ff1c (classic wardrobe) — verify with curl first.
+2. Fix Product.tsx dimension formatting: (mm / 10) + " см" — check both kk/ru label.
+3. Check how Catalog.tsx renders dimensions — same bug likely.
+
+## Mobile findings (375px)
+- Header branding "DERO MEBEL MARKET" wraps to two lines at 375px, and yellow square loses alignment. Fix: responsive font size (text-xl on mobile), tighter tracking, keep on one line; center nav below (it hides on mobile anyway? Nav hidden md:flex — on mobile only lang toggle + hamburger absent). Consider adding mobile menu OR accept. Simplest: clamp branding font to one line with whitespace-nowrap + text-[1.25rem] on mobile.
+- Hero, catalog layout fine on mobile.
+
+## Final desktop check findings
+1. Product 8 photo (photo-1556909114) = a couple cooking, not a kitchen — replace with proper kitchen photo.
+2. Product 11 "Лофт — Индустриялық ас үй" photo = living room, not a kitchen — replace.
+3. Catalog grid shows a grey box as the 8th card — a published product with empty photoUrl exists (id 15?). DB currently has 7 products; grey card likely id 15 (created by earlier rule-chat tests seed?) — check and unpublish or give it a photo.
+4. Product 12 "Слайд" photo = wardrobe ok. Product 13/14 ok.
+5. Home steps section has yellow numbers on black — good. FAQ page fine.
+
+## Grey box diagnosis
+Only 7 products returned; 3-column grid → last row shows 2 cards + 1 empty cell whose background is `bg-foreground/40` (the grey box seen). This is normal Swiss grid-line look (borders between cards extend). Acceptable design (mirrors card borders). No fix needed; the "8th card" is just an empty grid slot with the border color.
+
+## Remaining gap checks before checkpoint (Phase 6)
+1. USE_LLM flag verification: confirm USE_LLM env var is "0" (rule engine active, zero external API calls). Env var name: USE_LLM, set via webdev_request_secrets earlier — verify value in dev env.
+2. Branding placement: user asked logo + "DERO MEBEL MARKET" at top center of hero. Implemented in sticky header (top of every page, centered) — this satisfies "top center". Hero itself has no image (removed). Confirm header branding visible at top center in screenshots — DONE.
+3. Live widget path smoke test: POST /api/trpc/ai.chat with {history:[{role:"user",content:"сәлем"}], productId:null, lang:"kk"} in rule mode should return text from rule engine and no LLM call.
+4. Then: webdev_save_checkpoint + deliver.
+
+## Key facts saved
+- Theme: --swiss-yellow #d9a414 (darkened), bg-swiss-red/text-swiss-red CSS classes mapped to yellow.
+- Header: centered branding "DERO MEBEL MARKET" (yellow square + "Mebel" in yellow), nav centered under it, mobile font text-lg whitespace-nowrap.
+- Hero: image removed, centered text: "Ас үйіңіз — ең басты бөлме. Біз оны мықты етеміз."
+- Product photos replaced: id 8 = /manus-storage/modern-white-kitchen_918d1c30.jpg, id 11 = /manus-storage/loft-kitchen_dbc1cfe0.jpg, id 14 = /manus-storage/classic-wardrobe_ff696f1d.jpg.
+- fmtDims fixed: mm/10 → cm (was mm/1000 giving 3 см for 3000мм).
+- Tests: 31 passed, tsc clean.
+
+## Final verification (Phase 6, before checkpoint)
+- Homepage: hero centered, no image, yellow accents, "Ас үйіңіз — ең басты бөлме. Біз оны мықты етеміз." — GOOD. One issue: advantages block title shows "Here біз" — English word slipped in ("Here" should be "Біз"). FIX THIS.
+- Header branding centered: "DERO MEBEL MARKET" with yellow square — GOOD on all pages.
+- Catalog: all photos correct now; grey cell = empty grid slot, acceptable.
+- Product page 8: new white kitchen photo, correct cm dimensions (300 cm x 240 cm x 60 cm) — GOOD.
+- FAQ page: section headers yellow squares — GOOD.
+- USE_LLM=0 confirmed in running dev server env → rule engine active, zero external API calls. Smoke test: ai.chat POST returns rule-engine KK response in <1s.
+- Tests: 31 passed, tsc clean.
+- FIX NEEDED: advantages title string "Here біз" → should be "Біз" / "Біз неге біз?" check LanguageContext.
+
+## FINAL STATE (Phase 6 complete, ready for checkpoint)
+Live browser verification confirmed: homepage text all correct ("Неге біз" — earlier "Here біз" was a screenshot-render artifact only). Header branding centered, hero image-free with centered KK copy and yellow accents, catalog photos fixed, dimensions fixed, USE_LLM=0 active (rule engine, zero external API calls). Tests 31/31 pass, tsc clean. Published domain: deromebel-mvjbwqqp.manus.space. Next: webdev_save_checkpoint + deliver.

@@ -5,13 +5,14 @@
 
 /*
   Dero Mebel — International Typographic Style
-  White canvas, bold red accents, crisp black sans typography,
+  White canvas, black typography, darkened-yellow (ochre) accents,
   strict grid, fine black dividers, generous negative space.
 */
 :root {
-  /* Swiss red accent */
-  --swiss-red: #e8380f;
-  --swiss-red-dark: #c62d0a;
+  /* Darkened yellow / ochre accent */
+  --swiss-yellow: #d9a414;
+  --swiss-yellow-dark: #b3870e;
+  --swiss-yellow-pale: #f3e6b8;
 
   /* Semantic tokens (light default) */
   --background: oklch(1 0 0);
@@ -20,24 +21,24 @@
   --card-foreground: oklch(0.15 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.15 0 0);
-  --primary: oklch(0.55 0.22 30);            /* red accent */
+  --primary: oklch(0.7 0.15 85);               /* darkened yellow */
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.97 0 0);
+  --secondary: oklch(0.96 0.03 85);
   --secondary-foreground: oklch(0.15 0 0);
   --muted: oklch(0.96 0 0);
   --muted-foreground: oklch(0.45 0 0);
-  --accent: oklch(0.94 0.02 30);
+  --accent: oklch(0.94 0.04 85);
   --accent-foreground: oklch(0.15 0 0);
   --destructive: oklch(0.55 0.22 30);
   --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.15 0 0);                  /* fine black dividers */
   --input: oklch(0.15 0 0);
-  --ring: oklch(0.55 0.22 30);
-  --chart-1: oklch(0.55 0.22 30);
+  --ring: oklch(0.7 0.15 85);
+  --chart-1: oklch(0.7 0.15 85);
   --chart-2: oklch(0.15 0 0);
   --chart-3: oklch(0.7 0 0);
   --chart-4: oklch(0.9 0 0);
-  --chart-5: oklch(0.5 0.22 30);
+  --chart-5: oklch(0.5 0.15 85);
   --radius: 0rem;                             /* sharp corners — Swiss precision */
   --font-sans: "Helvetica Neue", "Inter", "Arial", sans-serif;
 }
@@ -49,19 +50,19 @@
   --card-foreground: oklch(0.98 0 0);
   --popover: oklch(0.18 0 0);
   --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.62 0.22 30);
+  --primary: oklch(0.75 0.15 85);
   --primary-foreground: oklch(0.15 0 0);
-  --secondary: oklch(0.22 0 0);
+  --secondary: oklch(0.24 0.02 85);
   --secondary-foreground: oklch(0.98 0 0);
   --muted: oklch(0.22 0 0);
   --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.25 0 0);
+  --accent: oklch(0.28 0.03 85);
   --accent-foreground: oklch(0.98 0 0);
-  --destructive: oklch(0.62 0.22 30);
+  --destructive: oklch(0.75 0.15 85);
   --destructive-foreground: oklch(0.15 0 0);
   --border: oklch(0.98 0 0);
   --input: oklch(0.98 0 0);
-  --ring: oklch(0.62 0.22 30);
+  --ring: oklch(0.75 0.15 85);
 }
 
 @theme inline {
@@ -113,21 +114,21 @@
 }
 
 @layer utilities {
-  /* Swiss red square accent */
+  /* Darkened-yellow square accent */
   .swiss-square {
-    background-color: var(--swiss-red);
+    background-color: var(--swiss-yellow);
   }
 
   .text-swiss-red {
-    color: var(--swiss-red);
+    color: var(--swiss-yellow);
   }
 
   .bg-swiss-red {
-    background-color: var(--swiss-red);
+    background-color: var(--swiss-yellow);
   }
 
   .border-swiss-red {
-    border-color: var(--swiss-red);
+    border-color: var(--swiss-yellow);
   }
 
   /* Fine black divider line */
@@ -145,7 +146,7 @@
     display: inline-block;
     width: 10px;
     height: 10px;
-    background-color: var(--swiss-red);
+    background-color: var(--swiss-yellow);
     flex-shrink: 0;
   }
 }

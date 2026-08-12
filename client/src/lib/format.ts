@@ -6,6 +6,6 @@ export function fmtPrice(v: number | null | undefined): string {
 
 /** Dimension string from mm values */
 export function fmtDims(w?: number | null, h?: number | null, d?: number | null): string {
-  const parts = [w, h, d].filter((x) => x != null).map((x) => `${Math.round(x! / 100 / 10)} см`);
+  const parts = [w, h, d].filter((x) => x != null).map((x) => `${Math.round(x! / 10)} см`);
   return parts.join(" × ") || "—";
 }

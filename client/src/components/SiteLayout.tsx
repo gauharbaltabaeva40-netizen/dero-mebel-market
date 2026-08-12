@@ -21,15 +21,16 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-foreground">
-        <div className="container flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-3 group">
-            <span className="swiss-square w-5 h-5 inline-block transition-transform duration-150 group-hover:scale-90" />
-            <span className="font-black text-lg uppercase tracking-tight">
-              Dero<span className="text-swiss-red">Mebel</span>
-            </span>
-          </Link>
+        {/* Centered branding: logo square + DERO MEBEL MARKET */}
+        <div className="container flex items-center justify-center py-3 gap-3">
+          <span className="swiss-square w-5 h-5 md:w-6 md:h-6 inline-block shrink-0" />
+          <span className="font-black text-lg md:text-2xl uppercase tracking-[0.14em] md:tracking-[0.18em] whitespace-nowrap">
+            Dero <span className="text-swiss-red">Mebel</span> Market
+          </span>
+        </div>
 
-          <nav className="hidden md:flex items-center gap-8">
+        <div className="container flex items-center justify-center gap-8 h-14 border-t border-foreground/30">
+          <nav className="flex items-center gap-8">
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -45,25 +46,23 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
-            <div className="flex border border-foreground text-xs font-bold uppercase">
-              <button
-                onClick={() => setLang("kk")}
-                className={`px-2.5 py-1 transition-colors duration-150 ${
-                  lang === "kk" ? "bg-foreground text-background" : "hover:bg-muted"
-                }`}
-              >
-                QZ
-              </button>
-              <button
-                onClick={() => setLang("ru")}
-                className={`px-2.5 py-1 transition-colors duration-150 border-l border-foreground ${
-                  lang === "ru" ? "bg-foreground text-background" : "hover:bg-muted"
-                }`}
-              >
-                RU
-              </button>
-            </div>
+          <div className="flex border border-foreground text-xs font-bold uppercase">
+            <button
+              onClick={() => setLang("kk")}
+              className={`px-2.5 py-1 transition-colors duration-150 ${
+                lang === "kk" ? "bg-foreground text-background" : "hover:bg-muted"
+              }`}
+            >
+              QZ
+            </button>
+            <button
+              onClick={() => setLang("ru")}
+              className={`px-2.5 py-1 transition-colors duration-150 border-l border-foreground ${
+                lang === "ru" ? "bg-foreground text-background" : "hover:bg-muted"
+              }`}
+            >
+              RU
+            </button>
           </div>
         </div>
       </header>
@@ -76,7 +75,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <span className="swiss-square w-4 h-4 inline-block" />
-              <span className="font-black uppercase tracking-tight">Dero Mebel</span>
+              <span className="font-black uppercase tracking-wider">Dero Mebel Market</span>
             </div>
             <p className="text-sm text-muted-foreground max-w-xs">
               {lang === "kk"
@@ -87,7 +86,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
           <div>
             <p className="swiss-label mb-4">{t.nav.catalog}</p>
             <div className="flex flex-col gap-2 text-sm">
-              <Link href="/catalog?category=kitchen" className="hover:text-swiss-red transition-colors">
+              <Link href="/catalog?category=kitchen" className="hover:text-swiss-red transition-colors" style={{ color: "var(--swiss-yellow-dark)" }}>
                 {t.home.catKitchen}
               </Link>
               <Link href="/catalog?category=wardrobe" className="hover:text-swiss-red transition-colors">

@@ -42,9 +42,19 @@
 - [x] Deliver MVP to user
 
 ## Phase 5 — Zero-API rule-based assistant (free AI replacement)
-- [ ] Rule-based chat engine on backend: intent detection (keywords, bilingual KK/RU), dialog state machine, FAQ retrieval
+- [x] Rule-based chat engine on backend: intent detection (keywords, bilingual KK/RU), dialog state machine, FAQ retrieval
 - [x] Rule engine uses same contract as LLM chat (meta: askContact/leadCreated/handoff/score) so frontend stays unchanged
-- [ ] Pricing via existing backend formula only; lead scoring and human handoff preserved
+- [x] Pricing via existing backend formula only; lead scoring and human handoff preserved
 - [x] Swap flag (e.g. USE_LLM env/setting) to switch back to real LLM (Gemini etc.) later without frontend changes
-- [ ] Vitest coverage for rule engine intents and dialog flows
-- [ ] End-to-end verification: chat works with zero external API calls
+- [x] Vitest coverage for rule engine intents and dialog flows
+- [x] End-to-end verification: chat works with zero external API calls
+
+## Phase 6 — Site polish & rebranding (user request)
+
+- [x] Logo + "DERO MEBEL MARKET" name centered at top center of hero
+- [x] Text/accents in black & yellow (darkened yellow) instead of red
+- [x] Remove hero image
+- [x] Improve homepage hero copy
+- [x] Center major page elements (not edge-aligned)
+- [x] Fix remaining cosmetic issues (catalog/product/FAQ)
+- [x] Verify all pages visually, checkpoint and deliver

@@ -12,52 +12,34 @@ export default function Home() {
     <div>
       {/* ── HERO ─────────────────────────────────────── */}
       <section className="border-b border-foreground">
-        <div className="container grid md:grid-cols-12 gap-8 py-16 md:py-24 items-center">
-          <div className="md:col-span-7">
-            <p className="swiss-label mb-6">{t.home.heroLabel}</p>
-            <h1 className="text-5xl md:text-7xl font-black leading-[0.95] tracking-tight mb-6">
-              {t.home.heroTitle.split(".")[0]}.
-              <br />
-              <span className="text-swiss-red">{t.home.heroTitle.split(".")[1]}</span>
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-xl mb-8">{t.home.heroSub}</p>
-            <div className="flex flex-wrap gap-4">
-              <Button
-                size="lg"
-                className="bg-swiss-red hover:bg-swiss-red/90 text-primary-foreground rounded-none px-8 h-12 text-sm font-bold uppercase tracking-wider active:scale-[0.97] transition-transform"
-                onClick={() => openChat({ initialMessage: undefined })}
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                {t.home.heroCta1}
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="rounded-none px-8 h-12 text-sm font-bold uppercase tracking-wider border-foreground hover:bg-foreground hover:text-background transition-colors"
-              >
-                <Link href="/catalog">
-                  {t.home.heroCta2}
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-
-          <div className="md:col-span-5">
-            <div className="border border-foreground p-2">
-              <img
-                src="https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=900&q=80"
-                alt="Modern kitchen"
-                className="w-full aspect-[4/5] object-cover grayscale-[20%]"
-              />
-              <div className="flex items-center justify-between px-2 py-3 border-t border-foreground">
-                <span className="text-xs font-bold uppercase tracking-widest">
-                  {lang === "kk" ? "Ас үй · Kitchen" : "Кухня · Ас үй"}
-                </span>
-                <span className="swiss-square w-3 h-3" />
-              </div>
-            </div>
+        <div className="container py-20 md:py-28 flex flex-col items-center text-center max-w-4xl mx-auto">
+          <p className="swiss-label mb-6">{t.home.heroLabel}</p>
+          <h1 className="text-5xl md:text-7xl font-black leading-[0.95] tracking-tight mb-8">
+            {t.home.heroTitle}
+            <br />
+            <span className="text-swiss-red">{t.home.heroTitleAccent}</span>
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mb-10">{t.home.heroSub}</p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Button
+              size="lg"
+              className="bg-swiss-red hover:bg-swiss-red/90 text-primary-foreground rounded-none px-8 h-12 text-sm font-bold uppercase tracking-wider active:scale-[0.97] transition-transform"
+              onClick={() => openChat({ initialMessage: undefined })}
+            >
+              <MessageCircle className="w-4 h-4 mr-2" />
+              {t.home.heroCta1}
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="rounded-none px-8 h-12 text-sm font-bold uppercase tracking-wider border-foreground hover:bg-foreground hover:text-background transition-colors"
+            >
+              <Link href="/catalog">
+                {t.home.heroCta2}
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
+            </Button>
           </div>
         </div>
 
@@ -79,24 +61,18 @@ export default function Home() {
       </section>
 
       {/* ── INTRO ────────────────────────────────────── */}
-      <section className="container py-20 grid md:grid-cols-12 gap-8">
-        <div className="md:col-span-3">
-          <p className="swiss-label">{t.home.introLabel}</p>
-        </div>
-        <div className="md:col-span-9">
-          <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-6">{t.home.introTitle}</h2>
-          <p className="text-lg text-muted-foreground max-w-3xl leading-relaxed">{t.home.introText}</p>
-        </div>
+      <section className="container py-20 flex flex-col items-center text-center max-w-4xl mx-auto">
+        <p className="swiss-label mb-6">{t.home.introLabel}</p>
+        <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-6">{t.home.introTitle}</h2>
+        <p className="text-lg text-muted-foreground max-w-3xl leading-relaxed">{t.home.introText}</p>
       </section>
 
       {/* ── CATEGORIES ───────────────────────────────── */}
       <section className="border-y border-foreground bg-muted/40">
-        <div className="container py-20">
-          <div className="flex items-baseline justify-between mb-10">
-            <div>
-              <p className="swiss-label mb-4">{t.home.catsLabel}</p>
-              <h2 className="text-3xl md:text-5xl font-black tracking-tight">{t.home.catsTitle}</h2>
-            </div>
+        <div className="container py-20 flex flex-col items-center">
+          <div className="text-center mb-10">
+            <p className="swiss-label mb-4 justify-center">{t.home.catsLabel}</p>
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight">{t.home.catsTitle}</h2>
           </div>
 
           <div className="grid md:grid-cols-2 gap-px bg-foreground">
@@ -138,9 +114,9 @@ export default function Home() {
       </section>
 
       {/* ── ADVANTAGES ───────────────────────────────── */}
-      <section className="container py-20">
-        <p className="swiss-label mb-4">{t.home.advLabel}</p>
-        <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-12">{t.home.advTitle}</h2>
+      <section className="container py-20 flex flex-col items-center">
+        <p className="swiss-label mb-4 justify-center">{t.home.advLabel}</p>
+        <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-12 text-center">{t.home.advTitle}</h2>
         <div className="grid md:grid-cols-2 gap-px bg-foreground/40">
           {[t.home.adv1, t.home.adv2, t.home.adv3, t.home.adv4].map(([title, desc], i) => {
             const icons = [Factory, Ruler, Layers, ShieldCheck];
@@ -163,10 +139,10 @@ export default function Home() {
       {/* ── HOW TO ORDER ─────────────────────────────── */}
       <section className="border-y border-foreground bg-foreground text-background">
         <div className="container py-20">
-          <p className="swiss-label mb-4" style={{ color: "var(--swiss-red)" }}>
+          <p className="swiss-label mb-4 justify-center" style={{ color: "var(--swiss-yellow-dark)" }}>
             {t.home.stepsLabel}
           </p>
-          <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-14">{t.home.stepsTitle}</h2>
+          <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-14 text-center">{t.home.stepsTitle}</h2>
           <div className="grid md:grid-cols-4 gap-10">
             {[t.home.step1, t.home.step2, t.home.step3, t.home.step4].map(([title, desc], i) => (
               <div key={title} className="relative">
