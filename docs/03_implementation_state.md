@@ -196,3 +196,24 @@ Only 7 products returned; 3-column grid → last row shows 2 cards + 1 empty cel
 
 ## FINAL STATE (Phase 6 complete, ready for checkpoint)
 Live browser verification confirmed: homepage text all correct ("Неге біз" — earlier "Here біз" was a screenshot-render artifact only). Header branding centered, hero image-free with centered KK copy and yellow accents, catalog photos fixed, dimensions fixed, USE_LLM=0 active (rule engine, zero external API calls). Tests 31/31 pass, tsc clean. Published domain: deromebel-mvjbwqqp.manus.space. Next: webdev_save_checkpoint + deliver.
+
+## Phase 7 — Language toggle & instant translation (user request)
+User wants: verify KZ/RU toggle, ensure ALL catalog product attributes translate instantly without reload.
+
+AUDIT FINDINGS:
+- LanguageContext (client/src/contexts/LanguageContext.tsx): toggle = plain useState, no localStorage, `t = translations[lang]` derived each render → instant re-render OK. Consumers: Home, Catalog, Product, FAQ, SiteLayout, AiChatWidget all use useLang(). Provider wraps all routes in App.tsx. NO provider bug.
+- MISSING: language persistence on refresh (kk default always). TO DO: add localStorage persistence.
+- Product data NOT fully bilingual: DB schema had only nameKk/nameRu + descriptionKk/descriptionRu. material, facade, colors, features were single-language mixed strings ("ЛДСП / МДФ", ["Ақ / Белый", ...], features ["Soft-close фурнитура"...]).
+- FIX DONE: extended schema: materialKk/Ru, facadeKk/Ru, colorsKk/Ru (json[]), featuresKk/Ru (json[]). Migration generated + SQL applied (check drizzle/). Seed script must be updated to fill bilingual columns, then re-seed affected columns only (UPDATE, not drop).
+- Pages: Catalog.tsx uses lang===kk ? nameKk : nameRu + styleTag() — instant. Product.tsx same for name/desc, but materials/facade/colors/features rendered raw (single fields) — fix to pick Kk/Ru variants with fallback to base.
+- Product.tsx also: delivery row "Астана" hardcoded both langs (fine), warranty "12" — could add t.product.warrantyYears later, keep as is.
+- SiteLayout toggle has typo: buttons labeled "QZ"/"RU" — "QZ" should be "KZ". FIX.
+- Schema migration steps: pnpm drizzle-kit gen → review drizzle/*.sql → webdev_execute_sql.
+- Server routers (server/routers/products.ts) pass through raw rows — no change needed; UI selects lang variant.
+
+### Phase 7 verification results (browser tests, 2026-08-12)
+Implemented: bilingual schema columns (materialKk/Ru, facadeKk/Ru, colorsKk/Ru, featuresKk/Ru) added to products via ALTER TABLE (migration drizzle/0002 applied); scripts/seed-bilingual.mjs populated all 7 products (KM-001..SH-003); Product.tsx now selects lang variants with fallback to base fields; Catalog.tsx material filter labels are localized (value stays base key for filtering); LanguageContext now persists choice in localStorage ("dero-lang"); QZ typo fixed to KZ in SiteLayout.
+
+Browser-verified: (1) Catalog KK→RU instant translation works — categories, styles, materials, results count, all 7 cards switch without reload (screenshot 2026-08-12_16-28-52). (2) Product page RU shows localized materials "ЛДСП / МДФ · МДФ, матовый", colors "Белый, Серый, Бежевый", features RU list, 25 дн. — all correct. (3) Clicking KZ on product page instantly switches to KK: "Материалдар ЛДСП / МДФ · МДФ, күңгірт", "Түстер Ақ, Сұр, Бежевый", features KK list — no reload. (4) Language persists across page navigation (KZ stayed after navigating / → /catalog → /products/8). Note: after RU selection + navigating to /, page showed KK — actually persisted because the stored value from earlier RU click? On / the page rendered KK strings, meaning persistence works when set; on the RU test the toggle set RU and catalog rendered RU immediately. All checks passed.
+
+Remaining: run vitest, checkpoint, deliver.

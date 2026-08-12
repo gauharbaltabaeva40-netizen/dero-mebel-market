@@ -25,8 +25,17 @@ export default function Catalog() {
 
   const materials = useMemo(() => {
     if (!products) return [];
-    return Array.from(new Set(products.map((p) => p.material))).sort();
-  }, [products]);
+    // Translated material list with both-language view of the same products.
+    return Array.from(
+      new Map(
+        products.map((p) => {
+          const label = (lang === "kk" ? p.materialKk : p.materialRu) ?? p.material;
+          return [p.material, label] as const;
+        }),
+      ),
+    )
+      .sort(([, a], [, b]) => a.localeCompare(b));
+  }, [products, lang]);
 
   const filtered = useMemo(() => {
     if (!products) return [];
@@ -125,15 +134,15 @@ export default function Catalog() {
                   >
                     {t.catalog.all}
                   </button>
-                  {materials.map((m) => (
+                  {materials.map(([value, label]) => (
                     <button
-                      key={m}
-                      onClick={() => setMaterial(m)}
+                      key={value}
+                      onClick={() => setMaterial(value)}
                       className={`text-left px-3 py-2 text-sm font-semibold transition-colors ${
-                        material === m ? "bg-foreground text-background" : "hover:bg-muted"
+                        material === value ? "bg-foreground text-background" : "hover:bg-muted"
                       }`}
                     >
-                      {m}
+                      {label}
                     </button>
                   ))}
                 </div>

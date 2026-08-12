@@ -46,6 +46,21 @@ export default function Product() {
   const name = lang === "kk" ? product.nameKk : product.nameRu;
   const desc = lang === "kk" ? product.descriptionKk : product.descriptionRu;
 
+  // Bilingual product attributes — instant translation on language switch,
+  // fallback to shared base fields if the localized value is missing.
+  const material =
+    (lang === "kk" ? product.materialKk : product.materialRu) ?? product.material;
+  const facade =
+    (lang === "kk" ? product.facadeKk : product.facadeRu) ?? product.facade ?? "";
+  const colors =
+    ((lang === "kk" ? product.colorsKk : product.colorsRu) as string[] | undefined | null) ??
+    (product.colors as string[] | undefined | null) ??
+    [];
+  const features =
+    ((lang === "kk" ? product.featuresKk : product.featuresRu) as string[] | undefined | null) ??
+    (product.features as string[] | undefined | null) ??
+    [];
+
   return (
     <div className="container py-10 md:py-14">
       <Button
@@ -97,13 +112,13 @@ export default function Product() {
           </div>
 
           <div className="divide-y divide-foreground/30 border border-foreground">
-            <DetailRow label={t.product.materials} value={`${product.material}${product.facade ? ` · ${product.facade}` : ""}`} />
+            <DetailRow label={t.product.materials} value={`${material}${facade ? ` · ${facade}` : ""}`} />
             <DetailRow label={t.product.dimensions} value={fmtDims(product.widthMm, product.heightMm, product.depthMm)} />
-            <DetailRow label={t.product.colors} value={(product.colors as string[])?.join(", ") ?? "—"} />
+            <DetailRow label={t.product.colors} value={colors.join(", ") || "—"} />
             {product.leadTimeDays && (
               <DetailRow label={t.product.leadTime} value={`${product.leadTimeDays} ${t.product.days}`} icon={<Clock className="w-4 h-4" />} />
             )}
-            <DetailRow label={t.product.features} value={null} isList features={product.features as string[]} />
+            <DetailRow label={t.product.features} value={null} isList features={features} />
           </div>
 
           <div className="mt-6 border border-foreground bg-muted/50 p-5">

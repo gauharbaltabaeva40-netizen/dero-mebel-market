@@ -53,7 +53,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
                 lang === "kk" ? "bg-foreground text-background" : "hover:bg-muted"
               }`}
             >
-              QZ
+              KZ
             </button>
             <button
               onClick={() => setLang("ru")}

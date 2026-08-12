@@ -252,10 +252,28 @@ const LanguageContext = createContext<{
 });
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang>("kk");
+  const [lang, setLang] = useState<Lang>(() => {
+    try {
+      const stored = localStorage.getItem("dero-lang");
+      if (stored === "kk" || stored === "ru") return stored;
+    } catch {
+      // localStorage unavailable (SSR/privacy mode) — fall back to default
+    }
+    return "kk";
+  });
+
+  const setLangPersisted = (next: Lang) => {
+    setLang(next);
+    try {
+      localStorage.setItem("dero-lang", next);
+    } catch {
+      // ignore
+    }
+  };
+
   const t = translations[lang];
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t }}>
+    <LanguageContext.Provider value={{ lang, setLang: setLangPersisted, t }}>
       {children}
     </LanguageContext.Provider>
   );

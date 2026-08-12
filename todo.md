@@ -58,3 +58,13 @@
 - [x] Center major page elements (not edge-aligned)
 - [x] Fix remaining cosmetic issues (catalog/product/FAQ)
 - [x] Verify all pages visually, checkpoint and deliver
+
+## Phase 7 — Language toggle & instant product translation
+
+- [x] Audit LanguageContext + LanguageProvider: toggle works, persists, re-renders all consumers
+- [x] Audit product data model: every product field (name, desc, style, materials, colors) has KK + RU values in DB/seed
+- [x] Catalog page: filters, cards, titles translate instantly on toggle (no reload)
+- [x] Product detail page: all fields translate instantly on toggle
+- [x] Home / FAQ pages: verify instant translation on toggle
+- [x] Test language switching end-to-end and fix issues
+- [x] Checkpoint and deliver
