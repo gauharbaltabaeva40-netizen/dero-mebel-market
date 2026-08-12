@@ -270,3 +270,11 @@ REMAINING Phase 10:
 - **Works gallery:** the full mobile home-page capture shows the 12 real Kaspi project photos in a compact responsive grid; all gallery cards and section dividers remain inside the page frame.
 - **Runtime review:** new desktop/mobile captures produced no fresh browser-console errors after 18:45; the historical nested-anchor error remains only in the earlier log record from 18:14. The catalog markup now uses an `article` with independent internal links rather than nested anchors.
 - **Automated checks:** `pnpm exec tsc --noEmit` completed with zero errors; `pnpm test` completed with 33/33 passing tests, including two regression tests covering the no-price-limit initial catalog state.
+
+### Kaspi aggregate-only policy
+
+- By owner instruction, the storefront does not publish individual Kaspi customer-review text, reviewer names, dates, or helpfulness counts.
+- Product cards and detail pages retain only verified aggregate Kaspi data: rating where available, review count, and a direct link to the live Kaspi review page.
+- The temporary review-sample field and the raw sample data were removed from the database model before publication. No customer-review text is retained in the storefront codebase.
+- The 375 px and desktop captures of `/products/30012` show the aggregate panel only: verified count, rating availability state, and the external Kaspi review link. They contain no individual customer-review content.
+- The cleanup migration was verified against the database (`information_schema` reports zero `kaspiReviewSamples` columns). The aggregate-only schema regression test passes; final automated status is **34/34 Vitest tests passing** with a clean TypeScript check.

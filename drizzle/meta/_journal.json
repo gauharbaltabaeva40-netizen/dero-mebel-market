@@ -36,6 +36,20 @@
       "when": 1786559659223,
       "tag": "0004_gigantic_mikhail_rasputin",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1786560936540,
+      "tag": "0005_overconfident_killmonger",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1786561868697,
+      "tag": "0006_safe_vampiro",
+      "breakpoints": true
     }
   ]
 }

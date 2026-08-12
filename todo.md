@@ -110,11 +110,15 @@
 - [x] Parse DERO_мебель_база_данных_Kaspi.xlsx: all products, specs, prices
 - [x] Import all Excel products (bilingual KK/RU) into catalog DB with Kaspi image URLs (377 Kaspi items; 384 total catalog items)
 - [x] Kaspi review blocks on product cards + detail pages: verified rating where supplied, verified review count, and a direct link to the live Kaspi reviews
-- [ ] Add verbatim individual review texts only when an authorized Kaspi review-data source is provided; do not fabricate customer reviews
+- [x] Owner decision: do not publish verbatim Kaspi customer-review text; retain only verified aggregate data and live Kaspi review links
+- [x] Remove the unapproved review-text UI, raw review samples, and supporting code/test artifacts
+- [x] Remove the temporary review-sample database column and source note after verifying the migration scope
+- [x] Re-verify aggregate-only Kaspi panels and automated checks (desktop and 375 px phone capture reviewed; TypeScript clean; Vitest 34/34 passing; removed DB column confirmed absent)
+- [ ] Save and publish the aggregate-only Kaspi cleanup release
 - [x] Mobile audit: animations and styles tuned for phone viewport (catalog, product, gallery, chat)
 - [x] Reduce header logo and adjacent DERO MEBEL / MARKET wordmark scale while preserving readability
 - [x] Verify visually (desktop + mobile) and run final tests (TypeScript clean; Vitest 33/33 passing)
-- [ ] Save checkpoint and deliver Phase 12 release
+- [x] Save and publish Phase 12 release checkpoint (fb0b0e71)
 - [x] Verify all Kaspi-linked catalog entries have populated KK/RU content and a product image URL (377/377 for titles, descriptions, and images; representative CDN checks returned HTTP 200)
 - [x] Verify phone layouts for the product page, works gallery, and sales-chat entry point (375 px captures reviewed: no horizontal overflow; gallery grid and gold chat trigger remain reachable)
 - [x] Ensure the catalog’s default price filter does not hide products above 500,000 ₸ (default view now shows all 384 published items)
