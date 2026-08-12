@@ -17,13 +17,13 @@ export default function Home() {
           <h1 className="text-5xl md:text-7xl font-black leading-[0.95] tracking-tight mb-8">
             {t.home.heroTitle}
             <br />
-            <span className="text-swiss-red">{t.home.heroTitleAccent}</span>
+            <span className="text-swiss-yellow">{t.home.heroTitleAccent}</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mb-10">{t.home.heroSub}</p>
           <div className="flex flex-wrap justify-center gap-4">
             <Button
               size="lg"
-              className="bg-swiss-red hover:bg-swiss-red/90 text-primary-foreground rounded-none px-8 h-12 text-sm font-bold uppercase tracking-wider active:scale-[0.97] transition-transform"
+              className="bg-swiss-yellow hover:bg-swiss-yellow/90 text-black rounded-none px-8 h-12 text-sm font-bold uppercase tracking-wider active:scale-[0.97] transition-transform"
               onClick={() => openChat({ initialMessage: undefined })}
             >
               <MessageCircle className="w-4 h-4 mr-2" />
@@ -89,7 +89,7 @@ export default function Home() {
                   <h3 className="text-2xl md:text-3xl font-black uppercase tracking-tight">{t.home.catKitchen}</h3>
                   <p className="text-sm text-muted-foreground mt-2 max-w-sm">{t.home.catKitchenDesc}</p>
                 </div>
-                <ChevronRight className="w-6 h-6 text-swiss-red group-hover:translate-x-1 transition-transform" />
+                <ChevronRight className="w-6 h-6 text-swiss-yellow group-hover:translate-x-1 transition-transform" />
               </div>
             </Link>
 
@@ -106,7 +106,7 @@ export default function Home() {
                   <h3 className="text-2xl md:text-3xl font-black uppercase tracking-tight">{t.home.catWardrobe}</h3>
                   <p className="text-sm text-muted-foreground mt-2 max-w-sm">{t.home.catWardrobeDesc}</p>
                 </div>
-                <ChevronRight className="w-6 h-6 text-swiss-red group-hover:translate-x-1 transition-transform" />
+                <ChevronRight className="w-6 h-6 text-swiss-yellow group-hover:translate-x-1 transition-transform" />
               </div>
             </Link>
           </div>
@@ -147,7 +147,7 @@ export default function Home() {
             {[t.home.step1, t.home.step2, t.home.step3, t.home.step4].map(([title, desc], i) => (
               <div key={title} className="relative">
                 <div className="flex items-baseline gap-4 mb-4">
-                  <span className="text-6xl font-black text-swiss-red">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="text-6xl font-black text-swiss-yellow">{String(i + 1).padStart(2, "0")}</span>
                 </div>
                 <h3 className="font-bold text-lg mb-2">{title}</h3>
                 <p className="text-sm text-background/60 leading-relaxed">{desc}</p>
@@ -183,7 +183,7 @@ export default function Home() {
                 className="flex items-center justify-between py-4 px-2 hover:bg-muted transition-colors group"
               >
                 <span className="font-medium">{q}</span>
-                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-swiss-red group-hover:translate-x-1 transition-all" />
+                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-swiss-yellow group-hover:translate-x-1 transition-all" />
               </Link>
             ))}
           </div>
@@ -207,7 +207,7 @@ export default function Home() {
             <p className="text-lg font-medium leading-relaxed mb-8">{t.home.aiBanner}</p>
             <Button
               onClick={() => openChat({})}
-              className="bg-swiss-red hover:bg-swiss-red/90 text-primary-foreground rounded-none w-full h-11 font-bold uppercase tracking-wider text-sm active:scale-[0.97] transition-transform"
+              className="bg-swiss-yellow hover:bg-swiss-yellow/90 text-black rounded-none w-full h-11 font-bold uppercase tracking-wider text-sm active:scale-[0.97] transition-transform"
             >
               {t.home.aiOpen}
             </Button>
@@ -221,7 +221,19 @@ export default function Home() {
           <div className="md:col-span-5">
             <p className="swiss-label mb-4">{t.home.contactLabel}</p>
             <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-6">{t.home.contactTitle}</h2>
-            <p className="text-muted-foreground max-w-md leading-relaxed">{t.home.contactNote}</p>
+            <div className="space-y-3 text-muted-foreground">
+              <a href="tel:+77010822764" className="block text-lg font-semibold text-foreground hover:underline">
+                +7 701 082 27 64
+              </a>
+              <a href="https://wa.me/77010822764" target="_blank" rel="noreferrer" className="block hover:underline" style={{ color: "var(--swiss-yellow-dark)" }}>
+                WhatsApp: +7 701 082 27 64
+              </a>
+              <p>Астана, Керей хан 27</p>
+              <p>10:00–20:00</p>
+              <a href="https://www.instagram.com/deromebel_market/" target="_blank" rel="noreferrer" className="block hover:underline" style={{ color: "var(--swiss-yellow-dark)" }}>
+                Instagram: @deromebel_market
+              </a>
+            </div>
           </div>
           <div className="md:col-span-7">
             <div className="border border-foreground bg-background p-8 md:p-10">
@@ -234,7 +246,7 @@ export default function Home() {
               <Button
                 size="lg"
                 onClick={() => openChat({})}
-                className="bg-swiss-red hover:bg-swiss-red/90 text-primary-foreground rounded-none px-10 h-12 font-bold uppercase tracking-wider text-sm active:scale-[0.97] transition-transform"
+                className="bg-swiss-yellow hover:bg-swiss-yellow/90 text-black rounded-none px-10 h-12 font-bold uppercase tracking-wider text-sm active:scale-[0.97] transition-transform"
               >
                 <MessageCircle className="w-4 h-4 mr-2" />
                 {t.home.heroCta1}

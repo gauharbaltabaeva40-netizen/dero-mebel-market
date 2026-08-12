@@ -87,7 +87,7 @@ export default function Product() {
             </div>
           </div>
           {desc && (
-            <div className="mt-8 border-l-4 border-swiss-red pl-5">
+            <div className="mt-8 border-l-4 border-swiss-yellow pl-5">
               <p className="text-base text-muted-foreground leading-relaxed">{desc}</p>
             </div>
           )}
@@ -159,7 +159,7 @@ export default function Product() {
                       : `Я хочу узнать про "${name}". Рассчитайте примерную цену.`,
                 })
               }
-              className="bg-swiss-red hover:bg-swiss-red/90 text-primary-foreground rounded-none h-12 font-bold uppercase tracking-wider text-sm active:scale-[0.97] transition-transform"
+              className="bg-swiss-yellow hover:bg-swiss-yellow/90 text-black rounded-none h-12 font-bold uppercase tracking-wider text-sm active:scale-[0.97] transition-transform"
             >
               <MessageCircle className="w-4 h-4 mr-2" />
               {t.product.orderAi}
@@ -202,7 +202,7 @@ function DetailRow({
 }) {
   return (
     <div className="flex items-start gap-3 px-4 py-3">
-      {icon && <span className="mt-0.5 text-swiss-red">{icon}</span>}
+      {icon && <span className="mt-0.5 text-swiss-yellow">{icon}</span>}
       <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground w-28 shrink-0 pt-0.5">
         {label}
       </span>

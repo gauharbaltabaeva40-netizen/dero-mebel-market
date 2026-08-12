@@ -42,7 +42,7 @@ export default function FaqPage() {
               <Accordion type="single" collapsible className="border border-foreground">
                 {items.map((f, i) => (
                   <AccordionItem key={f.id} value={`faq-${f.id}`} className="px-4">
-                    <AccordionTrigger className="text-left font-semibold hover:no-underline hover:text-swiss-red">
+                    <AccordionTrigger className="text-left font-semibold hover:no-underline hover:text-swiss-yellow">
                       {lang === "kk" ? f.questionKk : f.questionRu}
                     </AccordionTrigger>
                     <AccordionContent className="text-muted-foreground leading-relaxed">

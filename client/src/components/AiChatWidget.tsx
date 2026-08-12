@@ -239,7 +239,7 @@ function AiChatWidget({
           {/* header */}
           <div className="flex items-center justify-between border-b-2 border-foreground px-4 py-3 bg-foreground text-background">
             <div className="flex items-center gap-3">
-              <span className="bg-swiss-red w-5 h-5 inline-flex items-center justify-center">
+              <span className="w-5 h-5 inline-flex items-center justify-center" style={{ backgroundColor: "var(--swiss-yellow)" }}>
                 <Sparkles className="w-3 h-3 text-background" />
               </span>
               <div>
@@ -281,7 +281,7 @@ function AiChatWidget({
                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                         {t.chat.scoreBadge}
                       </span>
-                      <span className="text-xs font-black px-2 py-0.5 bg-swiss-red text-primary-foreground">
+                      <span className="text-xs font-black px-2 py-0.5 text-primary-foreground" style={{ backgroundColor: "var(--swiss-yellow)" }}>
                         {t.chat.scores[msg.meta.score]}
                       </span>
                     </div>
@@ -289,7 +289,7 @@ function AiChatWidget({
 
                   {/* handoff notice */}
                   {msg.meta?.handoff && (
-                    <div className="mt-2 pt-2 border-t border-swiss-red text-swiss-red text-xs font-bold">
+                    <div className="mt-2 pt-2 border-t border-swiss-yellow text-swiss-yellow-dark text-xs font-bold" style={{ color: "var(--swiss-yellow-dark)", borderColor: "var(--swiss-yellow)" }}>
                       {t.chat.managerHandoff}
                     </div>
                   )}
@@ -298,7 +298,7 @@ function AiChatWidget({
                   {msg.meta?.productLink && (
                     <a
                       href={`/products/${msg.meta.productLink.id}`}
-                      className="mt-2 inline-block text-xs font-bold uppercase tracking-widest text-swiss-red border-b border-swiss-red hover:opacity-70"
+                      className="mt-2 inline-block text-xs font-bold uppercase tracking-widest hover:opacity-70" style={{ color: "var(--swiss-yellow-dark)" }}
                     >
                       → {lang === "kk" ? msg.meta.productLink.nameKk : msg.meta.productLink.nameRu}
                     </a>
@@ -323,14 +323,14 @@ function AiChatWidget({
                       <Button
                         size="sm"
                         onClick={submitLead}
-                        className="w-full rounded-none bg-swiss-red hover:bg-swiss-red/90 text-primary-foreground font-bold uppercase tracking-wider text-xs h-9"
+                        className="w-full rounded-none text-primary-foreground font-bold uppercase tracking-wider text-xs h-9" style={{ backgroundColor: "var(--swiss-yellow)", color: "#000" }}
                       >
                         {t.chat.leadSubmit}
                       </Button>
                     </div>
                   )}
                   {leadSubmitted && msg.meta?.askContact && (
-                    <p className="mt-2 pt-2 border-t border-foreground/30 text-xs font-bold text-swiss-red">
+                    <p className="mt-2 pt-2 border-t border-foreground/30 text-xs font-bold" style={{ color: "var(--swiss-yellow-dark)" }}>
                       {t.chat.leadThanks}
                     </p>
                   )}
@@ -377,7 +377,7 @@ function AiChatWidget({
               size="icon"
               onClick={() => sendMessage(input)}
               disabled={chatMutation.isPending || !input.trim()}
-              className="rounded-none bg-swiss-red hover:bg-swiss-red/90 text-primary-foreground active:scale-95 transition-transform"
+              className="rounded-none text-primary-foreground active:scale-95 transition-transform" style={{ backgroundColor: "var(--swiss-yellow)", color: "#000" }}
             >
               <Send className="w-4 h-4" />
             </Button>
@@ -421,9 +421,9 @@ export function ChatTrigger() {
         window.dispatchEvent(new CustomEvent("dero-chat-state", { detail: { open: !isOpen } }));
       }}
       className={`fixed bottom-5 right-5 z-50 w-14 h-14 flex items-center justify-center transition-transform duration-200 active:scale-90 ${
-        isOpen ? "bg-foreground text-background rotate-0" : "bg-swiss-red text-primary-foreground hover:scale-105"
+        isOpen ? "bg-foreground text-background rotate-0" : "text-primary-foreground hover:scale-105"
       }`}
-      style={{ boxShadow: "3px 3px 0 0 rgba(0,0,0,0.9)" }}
+      style={{ backgroundColor: isOpen ? undefined : "var(--swiss-yellow)", boxShadow: "3px 3px 0 0 rgba(0,0,0,0.9)" }}
       aria-label={t.chat.title}
     >
       {isOpen ? <X className="w-5 h-5" /> : <MessageCircle className="w-6 h-6" />}

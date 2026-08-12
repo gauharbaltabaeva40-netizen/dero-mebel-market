@@ -179,7 +179,7 @@ export default function Catalog() {
               <p className="text-sm text-muted-foreground mb-6">{t.catalog.noResults.split(".")[1]}</p>
               <Button
                 onClick={() => openChat({})}
-                className="bg-swiss-red hover:bg-swiss-red/90 text-primary-foreground rounded-none"
+                className="bg-swiss-yellow hover:bg-swiss-yellow/90 text-black rounded-none"
               >
                 AI
               </Button>

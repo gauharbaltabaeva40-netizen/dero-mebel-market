@@ -68,3 +68,18 @@
 - [x] Home / FAQ pages: verify instant translation on toggle
 - [x] Test language switching end-to-end and fix issues
 - [x] Checkpoint and deliver
+
+## Phase 8 — Vite HMR websocket error fix
+- [x] Diagnose Vite HMR websocket error on dev preview (browser connects HTTP to localhost:5173 via proxy but WS fails)
+- [x] Verify dev server loads cleanly without the error, checkpoint and report
+
+## Phase 9 — Logo integration & Instagram business info
+
+- [x] Upload official logo image to webdev storage
+- [x] Header: use logo image (centered) + gold/white styling consistent with logo
+- [x] Accent palette: logo gold instead of current yellow; body stays black-on-white
+- [x] Dark sections (footer, CTA bands, chat widget): black background, white/gold text
+- [x] Four-sided page padding/frame on all pages (desktop + mobile)
+- [x] Gather business info from https://www.instagram.com/deromebel_market/ (phone, location, hours, products, delivery terms)
+- [x] Update site content: contacts, about, FAQ/pricing with real Instagram info
+- [x] Verify visually, run tests (tsc 0 errors, vitest 31/31), checkpoint and deliver

@@ -140,7 +140,28 @@ REMAINING cosmetic issues spotted in full-page screenshots:
 4. Home steps section: black bg with yellow numbers — looks good.
 5. FAQ page: accordion items look fine but could center content; acceptable.
 6. Catalog grid last card grey box — must fix (image URL broken for that product row).
-7. Consider centering catalog page heading block left is ok (standard). Keep.
+7. Consider centering catalog page heading bloc
+
+## Phase 9 progress (2026-08-12) — LOGO + INSTAGRAM DATA
+
+### Done
+- Logo `/manus-storage/dero-mebel-logo_6177e179.png` integrated: header (centered, h-16 md:h-20, removed red square + text branding), footer dark bg with logo image (h-12).
+- SiteLayout footer now black bg (bg-foreground text-background); footer catalog links use gold style var.
+- `main py-6 md:py-8` page-frame padding added.
+- Screenshot verified: header logo OK, hero gold accent text OK, catalog 7 items, footer logo OK.
+
+### Instagram findings (@deromebel_market)
+- Phone/WhatsApp: +7 701 082 27 64
+- Address: Astana, Kerey Khan 27 (Керей хан 27)
+- Hours: 10:00–20:00
+- Instagram bio confirms: мекенжай Керей хан 27, 87010822764, 10:00–20:00
+
+### Remaining TODO (Phase 9)
+- [ ] Fix catalog last wardrobe card gray placeholder image (id ~14)
+- [ ] Update companySettings in DB: phone +77010822764, whatsapp wa.me/77010822764, address Керей хан 27, Astana, hours 10:00–20:00, instagram deromebel_market
+- [ ] Render real contacts in footer/contact sections + WhatsApp CTA link
+- [ ] Verify chat widget header dark style with gold accent
+- [ ] vitest check, checkpoint, deliverk left is ok (standard). Keep.
 8. Stats strip on home: fine.
 
 Note: product photos are Unsplash URLs seeded in DB via scripts/seed-db.mjs.
@@ -217,3 +238,14 @@ Implemented: bilingual schema columns (materialKk/Ru, facadeKk/Ru, colorsKk/Ru, 
 Browser-verified: (1) Catalog KK→RU instant translation works — categories, styles, materials, results count, all 7 cards switch without reload (screenshot 2026-08-12_16-28-52). (2) Product page RU shows localized materials "ЛДСП / МДФ · МДФ, матовый", colors "Белый, Серый, Бежевый", features RU list, 25 дн. — all correct. (3) Clicking KZ on product page instantly switches to KK: "Материалдар ЛДСП / МДФ · МДФ, күңгірт", "Түстер Ақ, Сұр, Бежевый", features KK list — no reload. (4) Language persists across page navigation (KZ stayed after navigating / → /catalog → /products/8). Note: after RU selection + navigating to /, page showed KK — actually persisted because the stored value from earlier RU click? On / the page rendered KK strings, meaning persistence works when set; on the RU test the toggle set RU and catalog rendered RU immediately. All checks passed.
 
 Remaining: run vitest, checkpoint, deliver.
+
+### Gray card investigation (Phase 9)
+- classic-wardrobe_ff696f1d.jpg renders fine (200, gold classic wardrobe photo). The gray box in full-page catalog screenshot appears in the EMPTY 8th grid slot (7 results → grid column with no 8th card) — it is an empty grid cell styling artifact, not a broken image. All 7 product images load correctly. No data fix needed.
+- companySettings keys: company_name, city, phone, whatsapp, instagram, kaspi, address, working_hours, manager_contact, pricing_note. Values phone..manager_contact = "UNKNOWN" → update with real Instagram data.
+
+### Phase 9 verified final (before checkpoint)
+Hero verified: gold "AI-дан сұрау" button with black text renders correctly; gold accent hero title; catalog 7 items all real images; footer black with logo + real contacts (phone +7 701 082 27 64, WhatsApp, Керей хан 27, 10:00–20:00, Instagram @deromebel_market); contact section on Home has same real data; FAQ page OK with gold section markers; nav active underline now gold; chat widget FAB + header + CTAs switched to gold/black per logo. tsc 0 errors, vitest 31/31 pass.
+
+All swiss-red utility classes renamed conceptually to swiss-yellow in pages/components (new utilities added in index.css: .text-swiss-yellow, .text-swiss-yellow-dark, .bg-swiss-yellow, .bg-swiss-yellow/90, .border-swiss-yellow). Old .swiss-red utilities in index.css still exist but no longer used by pages (kept for compatibility).
+
+DB updated: companySettings phone/whatsapp/instagram/address/working_hours/manager_contact set to real Instagram values; kaspi reset to UNKNOWN with description noting owner must confirm.

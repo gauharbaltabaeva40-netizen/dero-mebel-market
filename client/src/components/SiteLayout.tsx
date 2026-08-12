@@ -7,6 +7,12 @@ import { ChatTrigger } from "@/components/AiChatWidget";
  * Swiss-style layout: top thin black border, uppercase navigation,
  * red square as the brand mark.
  */
+const LOGO_URL = "/manus-storage/dero-mebel-logo_6177e179.png";
+
+/**
+ * Swiss-style layout: top thin black border, uppercase navigation,
+ * official DERO MEBEL MARKET logo (silver/white lettering + gold accents).
+ */
 export default function SiteLayout({ children }: { children: ReactNode }) {
   const { t, lang, setLang } = useLang();
   const [location] = useLocation();
@@ -19,14 +25,17 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-foreground">
-        {/* Centered branding: logo square + DERO MEBEL MARKET */}
-        <div className="container flex items-center justify-center py-3 gap-3">
-          <span className="swiss-square w-5 h-5 md:w-6 md:h-6 inline-block shrink-0" />
-          <span className="font-black text-lg md:text-2xl uppercase tracking-[0.14em] md:tracking-[0.18em] whitespace-nowrap">
-            Dero <span className="text-swiss-red">Mebel</span> Market
-          </span>
+    <div className="min-h-screen flex flex-col bg-muted/50">
+      {/* Four-sided page frame: outer padding on all sides */}
+      <div className="flex-1 flex flex-col m-2 md:m-4 lg:m-6">
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border border-foreground">
+        {/* Centered branding: official logo image */}
+        <div className="container flex items-center justify-center py-2">
+          <img
+            src={LOGO_URL}
+            alt="Dero Mebel Market"
+            className="h-16 md:h-20 w-auto object-contain"
+          />
         </div>
 
         <div className="container flex items-center justify-center gap-8 h-14 border-t border-foreground/30">
@@ -37,7 +46,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
                 href={item.href}
                 className={`text-sm font-semibold uppercase tracking-wider transition-colors duration-150 border-b-2 pb-0.5 ${
                   location === item.href
-                    ? "border-swiss-red text-foreground"
+                    ? "border-swiss-yellow text-foreground"
                     : "border-transparent text-muted-foreground hover:text-foreground hover:border-foreground/30"
                 }`}
               >
@@ -67,38 +76,60 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 py-6 md:py-8">{children}</main>
       <ChatTrigger />
 
-      <footer className="border-t border-foreground mt-0">
+      <footer className="border border-foreground bg-foreground text-background">
         <div className="container py-10 grid md:grid-cols-3 gap-8">
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <span className="swiss-square w-4 h-4 inline-block" />
-              <span className="font-black uppercase tracking-wider">Dero Mebel Market</span>
+              <img src={LOGO_URL} alt="Dero Mebel Market" className="h-12 w-auto object-contain rounded-sm" />
             </div>
             <p className="text-sm text-muted-foreground max-w-xs">
               {lang === "kk"
                 ? "Астанада ас үй жиһаздары мен шкафтарды өз өндірісімізде жасаймыз."
                 : "Изготавливаем кухни и шкафы в собственном производстве в Астане."}
             </p>
+            <a
+              href="https://www.instagram.com/deromebel_market/"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 inline-block text-xs font-bold uppercase tracking-wider hover:underline"
+              style={{ color: "var(--swiss-yellow)" }}
+            >
+              Instagram →
+            </a>
           </div>
           <div>
             <p className="swiss-label mb-4">{t.nav.catalog}</p>
             <div className="flex flex-col gap-2 text-sm">
-              <Link href="/catalog?category=kitchen" className="hover:text-swiss-red transition-colors" style={{ color: "var(--swiss-yellow-dark)" }}>
+              <Link href="/catalog?category=kitchen" className="hover:text-swiss-yellow transition-colors" style={{ color: "var(--swiss-yellow-dark)" }}>
                 {t.home.catKitchen}
               </Link>
-              <Link href="/catalog?category=wardrobe" className="hover:text-swiss-red transition-colors">
+              <Link href="/catalog?category=wardrobe" className="hover:text-swiss-yellow transition-colors">
                 {t.home.catWardrobe}
               </Link>
             </div>
           </div>
           <div>
-            <p className="swiss-label mb-4">{t.home.contactLabel}</p>
-            <p className="text-sm text-muted-foreground">
-              {t.home.contactNote}
-            </p>
+            <p className="swiss-label mb-4" style={{ color: "var(--swiss-yellow)" }}>{t.home.contactLabel}</p>
+            <div className="text-sm space-y-1.5">
+              <a href="tel:+77010822764" className="block hover:underline">+7 701 082 27 64</a>
+              <a href="https://wa.me/77010822764" target="_blank" rel="noreferrer" className="block hover:underline">
+                WhatsApp: +7 701 082 27 64
+              </a>
+              <p className="text-muted-foreground">Астана, Керей хан 27</p>
+              <p className="text-muted-foreground">10:00–20:00</p>
+              <a
+                href="https://www.instagram.com/deromebel_market/"
+                target="_blank"
+                rel="noreferrer"
+                className="block hover:underline"
+                style={{ color: "var(--swiss-yellow)" }}
+              >
+                Instagram: @deromebel_market
+              </a>
+            </div>
           </div>
         </div>
         <div className="border-t border-foreground/40">
@@ -108,6 +139,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
       </footer>
+      </div>
     </div>
   );
 }

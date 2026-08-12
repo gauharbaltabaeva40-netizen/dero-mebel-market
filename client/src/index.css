@@ -130,6 +130,21 @@
   .border-swiss-red {
     border-color: var(--swiss-yellow);
   }
+  .text-swiss-yellow {
+    color: var(--swiss-yellow);
+  }
+  .text-swiss-yellow-dark {
+    color: var(--swiss-yellow-dark);
+  }
+  .bg-swiss-yellow {
+    background-color: var(--swiss-yellow);
+  }
+  .bg-swiss-yellow\/90 {
+    background-color: color-mix(in srgb, var(--swiss-yellow) 90%, transparent);
+  }
+  .border-swiss-yellow {
+    border-color: var(--swiss-yellow);
+  }
 
   /* Fine black divider line */
   .swiss-divider {
