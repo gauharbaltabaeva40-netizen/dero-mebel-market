@@ -83,3 +83,13 @@
 - [x] Gather business info from https://www.instagram.com/deromebel_market/ (phone, location, hours, products, delivery terms)
 - [x] Update site content: contacts, about, FAQ/pricing with real Instagram info
 - [x] Verify visually, run tests (tsc 0 errors, vitest 31/31), checkpoint and deliver
+
+## Phase 10 — Kaspi catalog import & contact links & wordmark (user request)
+
+- [x] Restore consistent logo-aligned site styling (audit and fix any visual regressions)
+- [x] Header wordmark: "DERO MEBEL" (black) + "MARKET" (gold) text next to logo
+- [x] Gather real product data from Kaspi link (productCode=166632370, merchantSku=657723785): names, prices, specs, images, description
+- [x] Import Kaspi products (bilingual KK/RU) with real images into catalog DB (12 products, total 19)
+- [x] Gather additional info from Instagram @deromebel_market (delivery, warranty, materials, production)
+- [x] Footer/contact links fully wired: Instagram, WhatsApp, phone (tel:), Kaspi, working URLs
+- [x] Verify visually, run tests (tsc 0 errors, vitest 31/31), checkpoint and deliver

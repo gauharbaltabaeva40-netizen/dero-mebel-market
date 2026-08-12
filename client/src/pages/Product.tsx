@@ -104,9 +104,11 @@ export default function Product() {
               </p>
               <p className="text-3xl font-black">
                 {fmtPrice(product.basePriceKzt)}
-                <span className="text-sm font-medium text-muted-foreground ml-1">
-                  {product.priceUnit === "per_meter" ? t.catalog.perMeter : t.catalog.perM2}
-                </span>
+                {product.priceUnit !== "fixed" && (
+                  <span className="text-sm font-medium text-muted-foreground ml-1">
+                    {product.priceUnit === "per_meter" ? t.catalog.perMeter : t.catalog.perM2}
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -127,9 +129,11 @@ export default function Product() {
             </p>
             <p className="text-2xl font-black">
               {fmtPrice(product.basePriceKzt)}
-              <span className="text-sm font-medium text-muted-foreground ml-1">
-                {product.priceUnit === "per_meter" ? t.catalog.perMeter : t.catalog.perM2}
-              </span>
+              {product.priceUnit !== "fixed" && (
+                <span className="text-sm font-medium text-muted-foreground ml-1">
+                  {product.priceUnit === "per_meter" ? t.catalog.perMeter : t.catalog.perM2}
+                </span>
+              )}
             </p>
             <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{t.product.estimatedNote}</p>
           </div>

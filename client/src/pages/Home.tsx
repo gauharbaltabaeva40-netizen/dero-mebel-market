@@ -233,6 +233,9 @@ export default function Home() {
               <a href="https://www.instagram.com/deromebel_market/" target="_blank" rel="noreferrer" className="block hover:underline" style={{ color: "var(--swiss-yellow-dark)" }}>
                 Instagram: @deromebel_market
               </a>
+              <a href="https://kaspi.kz/shop/m/30234153" target="_blank" rel="noreferrer" className="block hover:underline" style={{ color: "var(--swiss-yellow-dark)" }}>
+                Kaspi.kz — DERO мебель
+              </a>
             </div>
           </div>
           <div className="md:col-span-7">

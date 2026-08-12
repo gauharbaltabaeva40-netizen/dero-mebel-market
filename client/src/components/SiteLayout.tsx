@@ -29,13 +29,27 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
       {/* Four-sided page frame: outer padding on all sides */}
       <div className="flex-1 flex flex-col m-2 md:m-4 lg:m-6">
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border border-foreground">
-        {/* Centered branding: official logo image */}
-        <div className="container flex items-center justify-center py-2">
+        {/* Centered branding: official logo image + wordmark */}
+        <div className="container flex items-center justify-center gap-4 md:gap-6 py-2">
           <img
             src={LOGO_URL}
             alt="Dero Mebel Market"
             className="h-16 md:h-20 w-auto object-contain"
           />
+          <div className="flex flex-col leading-none select-none">
+            <span
+              className="text-2xl md:text-3xl font-black tracking-[0.18em]"
+              style={{ color: "var(--foreground)", fontFamily: "'Inter', sans-serif" }}
+            >
+              DERO MEBEL
+            </span>
+            <span
+              className="text-2xl md:text-3xl font-black tracking-[0.18em] mt-0.5"
+              style={{ color: "var(--swiss-yellow)", fontFamily: "'Inter', sans-serif" }}
+            >
+              MARKET
+            </span>
+          </div>
         </div>
 
         <div className="container flex items-center justify-center gap-8 h-14 border-t border-foreground/30">
@@ -90,15 +104,26 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
                 ? "Астанада ас үй жиһаздары мен шкафтарды өз өндірісімізде жасаймыз."
                 : "Изготавливаем кухни и шкафы в собственном производстве в Астане."}
             </p>
-            <a
-              href="https://www.instagram.com/deromebel_market/"
-              target="_blank"
-              rel="noreferrer"
-              className="mt-4 inline-block text-xs font-bold uppercase tracking-wider hover:underline"
-              style={{ color: "var(--swiss-yellow)" }}
-            >
-              Instagram →
-            </a>
+            <div className="mt-4 flex flex-col gap-2 text-xs font-bold uppercase tracking-wider">
+              <a
+                href="https://www.instagram.com/deromebel_market/"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-block hover:underline"
+                style={{ color: "var(--swiss-yellow)" }}
+              >
+                Instagram →
+              </a>
+              <a
+                href="https://kaspi.kz/shop/m/30234153"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-block hover:underline"
+                style={{ color: "var(--swiss-yellow-dark)" }}
+              >
+                Kaspi.kz →
+              </a>
+            </div>
           </div>
           <div>
             <p className="swiss-label mb-4">{t.nav.catalog}</p>
@@ -114,12 +139,10 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
           <div>
             <p className="swiss-label mb-4" style={{ color: "var(--swiss-yellow)" }}>{t.home.contactLabel}</p>
             <div className="text-sm space-y-1.5">
-              <a href="tel:+77010822764" className="block hover:underline">+7 701 082 27 64</a>
+              <a href="tel:+77010822764" className="block hover:underline font-bold text-background">+7 701 082 27 64</a>
               <a href="https://wa.me/77010822764" target="_blank" rel="noreferrer" className="block hover:underline">
                 WhatsApp: +7 701 082 27 64
               </a>
-              <p className="text-muted-foreground">Астана, Керей хан 27</p>
-              <p className="text-muted-foreground">10:00–20:00</p>
               <a
                 href="https://www.instagram.com/deromebel_market/"
                 target="_blank"
@@ -129,6 +152,17 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
               >
                 Instagram: @deromebel_market
               </a>
+              <a
+                href="https://kaspi.kz/shop/m/30234153"
+                target="_blank"
+                rel="noreferrer"
+                className="block hover:underline"
+                style={{ color: "var(--swiss-yellow-dark)" }}
+              >
+                Kaspi.kz — DERO мебель
+              </a>
+              <p className="text-muted-foreground">Астана, Керей хан 27</p>
+              <p className="text-muted-foreground">10:00–20:00</p>
             </div>
           </div>
         </div>

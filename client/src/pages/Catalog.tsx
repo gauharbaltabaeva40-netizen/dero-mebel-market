@@ -220,9 +220,11 @@ export default function Catalog() {
                           </p>
                           <p className="font-black text-lg">
                             {fmtPrice(p.basePriceKzt)}
-                            <span className="text-xs font-medium text-muted-foreground ml-1">
-                              {p.priceUnit === "per_meter" ? t.catalog.perMeter : t.catalog.perM2}
-                            </span>
+                            {p.priceUnit !== "fixed" && (
+                              <span className="text-xs font-medium text-muted-foreground ml-1">
+                                {p.priceUnit === "per_meter" ? t.catalog.perMeter : t.catalog.perM2}
+                              </span>
+                            )}
                           </p>
                         </div>
                       </div>

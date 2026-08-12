@@ -249,3 +249,16 @@ Hero verified: gold "AI-дан сұрау" button with black text renders correc
 All swiss-red utility classes renamed conceptually to swiss-yellow in pages/components (new utilities added in index.css: .text-swiss-yellow, .text-swiss-yellow-dark, .bg-swiss-yellow, .bg-swiss-yellow/90, .border-swiss-yellow). Old .swiss-red utilities in index.css still exist but no longer used by pages (kept for compatibility).
 
 DB updated: companySettings phone/whatsapp/instagram/address/working_hours/manager_contact set to real Instagram values; kaspi reset to UNKNOWN with description noting owner must confirm.
+
+## Phase 10 state (Aug 12, 2026)
+DONE so far in Phase 10:
+1. Header wordmark added in SiteLayout.tsx: logo image + "DERO MEBEL" (black, Inter font-black, tracking 0.18em) + "MARKET" (var(--swiss-yellow)) — verified in screenshot, looks good.
+2. Kaspi data gathered: 12 products with chars (ЛДСП, dims, colors) and photos. Images: /home/ubuntu/kaspi_imgs/product_{1..12}.{jpg|png} → uploaded to /manus-storage/product_1_3bd17395.jpg ... product_12_38b382dd.jpg. Data: /home/ubuntu/kaspi_final.json. Notes: /home/ubuntu/kaspi_research.md.
+3. 12 real Kaspi products inserted via scripts/seed-kaspi-products.mjs (SKU DR-*, wardrobe/kitchen, style modern/minimalist/loft, material "ЛДСП", priceUnit fixed, prices 149 900–245 000 ₸). Total products = 19. Verified in catalog screenshot.
+4. companySettings: added kaspi_store_url=https://kaspi.kz/shop/m/30234153, kaspi_merchant_name=DERO мебель.
+5. Footer SiteLayout.tsx updated: Kaspi link in brand block + contact column, tel/WhatsApp/Instagram links.
+
+REMAINING Phase 10:
+- [ ] Home.tsx contact section: add Kaspi link
+- [ ] Check rule-chat.ts knowledge base knows Kaspi store (optional)
+- [ ] pnpm test + tsc, checkpoint, deliver
