@@ -205,6 +205,11 @@ export default function Catalog() {
                       <span className="absolute top-3 left-3 bg-background border border-foreground px-2 py-1 text-[10px] font-bold uppercase tracking-widest">
                         {styleTag(p.style, t)}
                       </span>
+                      {p.kaspiUrl && (
+                        <span className="absolute top-3 right-3 bg-swiss-yellow text-black px-2 py-1 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+                          ★ {t.catalog.kaspiBadge}
+                        </span>
+                      )}
                     </div>
                     <div className="p-4 flex flex-col flex-1">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
@@ -227,7 +232,31 @@ export default function Catalog() {
                             )}
                           </p>
                         </div>
+                        {p.kaspiReviews ? (
+                          <p className="text-[10px] text-muted-foreground font-semibold text-right leading-tight">
+                            {p.kaspiReviews} {t.catalog.kaspiReviews}
+                          </p>
+                        ) : null}
                       </div>
+                      {p.kaspiUrl ? (
+                        <a
+                          href={p.kaspiUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="mt-3 bg-swiss-yellow hover:bg-swiss-yellow/90 text-black text-xs font-bold uppercase tracking-widest px-3 py-2.5 text-center transition-colors active:scale-[0.97]"
+                        >
+                          {t.catalog.buyKaspi}
+                        </a>
+                      ) : (
+                        <Link
+                          href={`/products/${p.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="mt-3 border border-foreground text-xs font-bold uppercase tracking-widest px-3 py-2.5 text-center hover:bg-foreground hover:text-background transition-colors"
+                        >
+                          {lang === "kk" ? "Толығырақ" : "Подробнее"}
+                        </Link>
+                      )}
                     </div>
                   </Link>
                 ))}

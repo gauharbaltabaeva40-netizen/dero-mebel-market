@@ -93,3 +93,13 @@
 - [x] Gather additional info from Instagram @deromebel_market (delivery, warranty, materials, production)
 - [x] Footer/contact links fully wired: Instagram, WhatsApp, phone (tel:), Kaspi, working URLs
 - [x] Verify visually, run tests (tsc 0 errors, vitest 31/31), checkpoint and deliver
+
+## Phase 11 — Direct Kaspi sales storefront (user request)
+
+- [x] Kaspi-дан сатып алу button on every catalog card and product page (direct link to Kaspi product page)
+- [x] Map each product to its Kaspi URL (12 products; per-product links saved in DB kaspiUrl + kaspiReviews)
+- [x] Direct-sales mode: no lead-form-first flow; CTA = buy on Kaspi; keep chat for questions
+- [x] Kaspi reviews/ratings info block on product cards + detail pages (real review counts from Kaspi)
+- [x] "Біздің жұмыстар" gallery section with 12 real Kaspi project photos, each tile links to Kaspi product page
+- [x] Overall style polish: consistent logo-aligned gold/black/white look, footer links unified gold
+- [x] Verify visually, run tests (tsc 0 errors, vitest 31/31), checkpoint and deliver

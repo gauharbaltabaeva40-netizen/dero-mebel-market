@@ -99,7 +99,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
             <div className="flex items-center gap-3 mb-4">
               <img src={LOGO_URL} alt="Dero Mebel Market" className="h-12 w-auto object-contain rounded-sm" />
             </div>
-            <p className="text-sm text-muted-foreground max-w-xs">
+            <p className="text-sm text-background/70 max-w-xs">
               {lang === "kk"
                 ? "Астанада ас үй жиһаздары мен шкафтарды өз өндірісімізде жасаймыз."
                 : "Изготавливаем кухни и шкафы в собственном производстве в Астане."}
@@ -109,7 +109,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
                 href="https://www.instagram.com/deromebel_market/"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-block hover:underline"
+                className="inline-block hover:underline hover:text-background transition-colors"
                 style={{ color: "var(--swiss-yellow)" }}
               >
                 Instagram →
@@ -118,8 +118,8 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
                 href="https://kaspi.kz/shop/m/30234153"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-block hover:underline"
-                style={{ color: "var(--swiss-yellow-dark)" }}
+                className="inline-block hover:underline hover:text-background transition-colors"
+                style={{ color: "var(--swiss-yellow)" }}
               >
                 Kaspi.kz →
               </a>
@@ -128,10 +128,10 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
           <div>
             <p className="swiss-label mb-4">{t.nav.catalog}</p>
             <div className="flex flex-col gap-2 text-sm">
-              <Link href="/catalog?category=kitchen" className="hover:text-swiss-yellow transition-colors" style={{ color: "var(--swiss-yellow-dark)" }}>
+              <Link href="/catalog?category=kitchen" className="hover:underline transition-colors" style={{ color: "var(--swiss-yellow)" }}>
                 {t.home.catKitchen}
               </Link>
-              <Link href="/catalog?category=wardrobe" className="hover:text-swiss-yellow transition-colors">
+              <Link href="/catalog?category=wardrobe" className="hover:underline transition-colors" style={{ color: "var(--swiss-yellow)" }}>
                 {t.home.catWardrobe}
               </Link>
             </div>
@@ -140,14 +140,14 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
             <p className="swiss-label mb-4" style={{ color: "var(--swiss-yellow)" }}>{t.home.contactLabel}</p>
             <div className="text-sm space-y-1.5">
               <a href="tel:+77010822764" className="block hover:underline font-bold text-background">+7 701 082 27 64</a>
-              <a href="https://wa.me/77010822764" target="_blank" rel="noreferrer" className="block hover:underline">
+              <a href="https://wa.me/77010822764" target="_blank" rel="noreferrer" className="block hover:underline hover:text-background transition-colors" style={{ color: "var(--swiss-yellow)" }}>
                 WhatsApp: +7 701 082 27 64
               </a>
               <a
                 href="https://www.instagram.com/deromebel_market/"
                 target="_blank"
                 rel="noreferrer"
-                className="block hover:underline"
+                className="block hover:underline hover:text-background transition-colors"
                 style={{ color: "var(--swiss-yellow)" }}
               >
                 Instagram: @deromebel_market
@@ -156,20 +156,20 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
                 href="https://kaspi.kz/shop/m/30234153"
                 target="_blank"
                 rel="noreferrer"
-                className="block hover:underline"
-                style={{ color: "var(--swiss-yellow-dark)" }}
+                className="block hover:underline hover:text-background transition-colors"
+                style={{ color: "var(--swiss-yellow)" }}
               >
                 Kaspi.kz — DERO мебель
               </a>
-              <p className="text-muted-foreground">Астана, Керей хан 27</p>
-              <p className="text-muted-foreground">10:00–20:00</p>
+              <p className="text-background/60">Астана, Керей хан 27</p>
+              <p className="text-background/60">10:00–20:00</p>
             </div>
           </div>
         </div>
         <div className="border-t border-foreground/40">
-          <div className="container py-4 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+          <div className="container py-4 flex flex-wrap items-center justify-between gap-2 text-xs text-background/60">
             <span>© {new Date().getFullYear()} Dero Mebel — {t.home.footerRights}.</span>
-            <span>{t.home.footerNote}</span>
+            <span className="text-background/60">{t.home.footerNote}</span>
           </div>
         </div>
       </footer>

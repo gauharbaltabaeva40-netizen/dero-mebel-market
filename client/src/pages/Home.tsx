@@ -4,6 +4,82 @@ import { Button } from "@/components/ui/button";
 import { useLang } from "@/contexts/LanguageContext";
 import { useOpenChat } from "@/components/AiChatWidget";
 
+// Real products sold on Kaspi (deromebel_market / DERO мебель) — photos from Kaspi, buy buttons link to Kaspi product pages.
+const galleryItems = [
+  {
+    url: "https://kaspi.kz/shop/p/shkaf-antresol-nyi-dero-mebel-dero-llnn-180x280h55-sm-bezhevyi-139238530",
+    img: "/manus-storage/product_1_97dc824b.jpg",
+    altKk: "Антресоль шкаф — 180x280х55, бежевый",
+    altRu: "Антресольный шкаф — 180x280х55, бежевый",
+  },
+  {
+    url: "https://kaspi.kz/shop/p/kuhonnyi-garnitur-dero-mebel-300x260h60-sm-bezhevyi-139238608",
+    img: "/manus-storage/product_2_7850f696.jpg",
+    altKk: "Ас үй гарнитуры — 300x260х60, бежевый",
+    altRu: "Кухонный гарнитур — 300x260х60, бежевый",
+  },
+  {
+    url: "https://kaspi.kz/shop/p/raspashnoi-shkaf-avero-180x260h55-sm-belyi-118183068",
+    img: "/manus-storage/product_3_bd47fb9d.png",
+    altKk: "AVERO шкафы — 180x260х55, ақ",
+    altRu: "Распашной шкаф AVERO — 180x260х55, белый",
+  },
+  {
+    url: "https://kaspi.kz/shop/p/raspashnoi-shkaf-miro-270x260h55-sm-belyi-118183120",
+    img: "/manus-storage/product_4_9612414c.png",
+    altKk: "MIRO шкафы — 270x260х55, ақ",
+    altRu: "Распашной шкаф MIRO — 270x260х55, белый",
+  },
+  {
+    url: "https://kaspi.kz/shop/p/raspashnoi-shkaf-menzo-270x260h55-sm-bezhevyi-118183182",
+    img: "/manus-storage/product_5_5952ea5b.png",
+    altKk: "MENZO шкафы — 270x260х55, бежевый",
+    altRu: "Распашной шкаф MENZO — 270x260х55, бежевый",
+  },
+  {
+    url: "https://kaspi.kz/shop/p/raspashnoi-shkaf-uno-180x260h55-sm-bezhevyi-118183238",
+    img: "/manus-storage/product_6_3e123931.png",
+    altKk: "UNO шкафы — 180x260х55, бежевый",
+    altRu: "Распашной шкаф UNO — 180x260х55, бежевый",
+  },
+  {
+    url: "https://kaspi.kz/shop/p/raspashnoi-shkaf-arlo-180x260h55-sm-temno-seryi-118183290",
+    img: "/manus-storage/product_7_114a96ea.png",
+    altKk: "ARLO шкафы — 180x260х55, қою сұр",
+    altRu: "Распашной шкаф ARLO — 180x260х55, тёмно-серый",
+  },
+  {
+    url: "https://kaspi.kz/shop/p/kuhonnyi-garnitur-dero-mebel-350x250h60-sm-belyi-korichnevyi-139238685",
+    img: "/manus-storage/product_8_75201777.jpg",
+    altKk: "Ас үй гарнитуры — 350x250х60, ақ/қоңыр",
+    altRu: "Кухонный гарнитур — 350x250х60, белый/коричневый",
+  },
+  {
+    url: "https://kaspi.kz/shop/p/raspashnoi-shkaf-scandi-lagom-300x250h55-sm-belyi-118183355",
+    img: "/manus-storage/product_9_7049722e.jpg",
+    altKk: "Scandi Lagom — 300x250х55, ақ",
+    altRu: "Распашной шкаф Scandi Lagom — 300x250х55, белый",
+  },
+  {
+    url: "https://kaspi.kz/shop/p/raspashnoi-shkaf-reno-250x260h50-sm-belyi-118183410",
+    img: "/manus-storage/product_10_45ddd2e6.png",
+    altKk: "RENO шкафы — 250x260х50, ақ",
+    altRu: "Распашной шкаф RENO — 250x260х50, белый",
+  },
+  {
+    url: "https://kaspi.kz/shop/p/raspashnoi-shkaf-scandi-lagom-300x250h55-sm-bezhevyi-118183470",
+    img: "/manus-storage/product_11_d887fdbb.jpg",
+    altKk: "Scandi Lagom — 300x250х55, бежевый",
+    altRu: "Распашной шкаф Scandi Lagom — 300x250х55, бежевый",
+  },
+  {
+    url: "https://kaspi.kz/shop/p/raspashnoi-shkaf-777-320x240h55-sm-belyi-118183528",
+    img: "/manus-storage/product_12_cc5d899a.jpg",
+    altKk: "777 шкафы — 320x240х55, ақ",
+    altRu: "Распашной шкаф 777 — 320x240х55, белый",
+  },
+];
+
 export default function Home() {
   const { t, lang } = useLang();
   const openChat = useOpenChat();
@@ -109,6 +185,45 @@ export default function Home() {
                 <ChevronRight className="w-6 h-6 text-swiss-yellow group-hover:translate-x-1 transition-transform" />
               </div>
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── OUR WORKS / KASPI GALLERY ────────────────── */}
+      <section className="border-y border-foreground">
+        <div className="container py-20 flex flex-col items-center">
+          <div className="text-center mb-10">
+            <p className="swiss-label mb-4 justify-center">{t.home.galleryLabel}</p>
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">{t.home.galleryTitle}</h2>
+            <p className="text-base text-muted-foreground max-w-2xl leading-relaxed">{t.home.gallerySub}</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-foreground/40 w-full">
+            {galleryItems.map((item) => (
+              <a
+                key={item.url}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group bg-background block"
+              >
+                <div className="aspect-square overflow-hidden">
+                  <img
+                    src={item.img}
+                    alt={lang === "kk" ? item.altKk : item.altRu}
+                    className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-300"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-3 border-t border-foreground/20">
+                  <p className="text-[11px] font-bold uppercase tracking-wide leading-tight">
+                    {lang === "kk" ? item.altKk : item.altRu}
+                  </p>
+                  <p className="text-[10px] uppercase tracking-widest mt-1.5" style={{ color: "var(--swiss-yellow-dark)" }}>
+                    {t.home.galleryOpen} →
+                  </p>
+                </div>
+              </a>
+            ))}
           </div>
         </div>
       </section>
@@ -243,8 +358,8 @@ export default function Home() {
               <p className="swiss-label mb-6">{t.home.aiOpen}</p>
               <p className="text-muted-foreground mb-8 leading-relaxed">
                 {lang === "kk"
-                  ? "AI консультант сұрақтарыңызға жауап беріп, параметрлеріңізді жинап, заявканы менеджерге жібереді. Телефон нөміріңізді қалдыру жеткілікті."
-                  : "AI-консультант ответит на вопросы, соберёт параметры и отправит заявку менеджеру. Достаточно оставить номер телефона."}
+                  ? "Тауарды Kaspi-дан бірден сатып алыңыз — кредит, бөліп төлеу немесе Kaspi Red. Жеке өлшемге ас үй немесе шкаф керек болса — AI консультантқа жазыңыз, шамамен бағаны есептейміз."
+                  : "Покупайте товары напрямую на Kaspi — в кредит, рассрочку или с Kaspi Red. Нужна кухня или шкаф по индивидуальным размерам — напишите AI-консультанту, рассчитаем примерную цену."}
               </p>
               <Button
                 size="lg"

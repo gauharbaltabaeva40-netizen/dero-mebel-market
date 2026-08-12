@@ -61,6 +61,10 @@ export const products = mysqlTable("products", {
   featuresKk: json("featuresKk").$type<string[]>(),
   featuresRu: json("featuresRu").$type<string[]>(),
   leadTimeDays: int("leadTimeDays"),
+  /** Direct Kaspi product page URL (sold on Kaspi marketplace). */
+  kaspiUrl: varchar("kaspiUrl", { length: 512 }),
+  /** Real review count from the Kaspi product page. */
+  kaspiReviews: int("kaspiReviews"),
   isPublished: boolean("isPublished").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

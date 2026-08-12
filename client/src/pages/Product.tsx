@@ -113,6 +113,31 @@ export default function Product() {
             </div>
           </div>
 
+          {/* ── KASPI REVIEWS BLOCK ─────────────────── */}
+          {product.kaspiUrl && (
+            <a
+              href={product.kaspiUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 border border-foreground block"
+            >
+              <div className="px-4 py-3 border-b border-foreground flex items-center gap-3">
+                <span className="flex items-center gap-1 text-lg font-black">
+                  {"★★★★★".slice(0, 5)}
+                </span>
+                <span className="text-xs font-bold uppercase tracking-widest">
+                  {t.catalog.kaspiRating}
+                </span>
+                <span className="ml-auto text-xs text-muted-foreground">
+                  {product.kaspiReviews ?? 0} {t.catalog.kaspiReviews} →
+                </span>
+              </div>
+              <p className="px-4 py-3 text-xs text-muted-foreground leading-relaxed">
+                {t.catalog.kaspiMerchantNote}
+              </p>
+            </a>
+          )}
+
           <div className="divide-y divide-foreground/30 border border-foreground">
             <DetailRow label={t.product.materials} value={`${material}${facade ? ` · ${facade}` : ""}`} />
             <DetailRow label={t.product.dimensions} value={fmtDims(product.widthMm, product.heightMm, product.depthMm)} />
@@ -153,8 +178,42 @@ export default function Product() {
           </div>
 
           <div className="mt-6 flex flex-col gap-3">
+            {product.kaspiUrl ? (
+              <a
+                href={product.kaspiUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-swiss-yellow hover:bg-swiss-yellow/90 text-black h-12 flex items-center justify-center gap-2 font-bold uppercase tracking-wider text-sm transition-colors active:scale-[0.97] transition-transform"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                {t.catalog.buyKaspi}
+              </a>
+            ) : null}
+            {product.kaspiUrl && (
+              <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest">
+                {t.catalog.buyKaspiNote}
+              </p>
+            )}
+            {!product.kaspiUrl && (
+              <Button
+                size="lg"
+                onClick={() =>
+                  openChat({
+                    initialMessage:
+                      lang === "kk"
+                        ? `Мен "${name}" жобасын тапсырыс бергім келеді. Бағасын есептеп беріңіз.`
+                        : `Хочу заказать проект "${name}". Рассчитайте примерную цену.`,
+                  })
+                }
+                className="rounded-none h-12 bg-swiss-yellow hover:bg-swiss-yellow/90 text-black font-bold uppercase tracking-wider text-sm active:scale-[0.97] transition-transform"
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                {lang === "kk" ? "Тапсырыс беру" : "Заказать проект"}
+              </Button>
+            )}
             <Button
               size="lg"
+              variant="outline"
               onClick={() =>
                 openChat({
                   initialMessage:
@@ -163,26 +222,10 @@ export default function Product() {
                       : `Я хочу узнать про "${name}". Рассчитайте примерную цену.`,
                 })
               }
-              className="bg-swiss-yellow hover:bg-swiss-yellow/90 text-black rounded-none h-12 font-bold uppercase tracking-wider text-sm active:scale-[0.97] transition-transform"
+              className="rounded-none h-12 font-bold uppercase tracking-wider text-sm border-foreground hover:bg-foreground hover:text-background transition-colors"
             >
               <MessageCircle className="w-4 h-4 mr-2" />
               {t.product.orderAi}
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() =>
-                openChat({
-                  initialMessage:
-                    lang === "kk"
-                      ? `"${name}" үлгісін тапсырыс бергім келеді.`
-                      : `Хочу заказать модель "${name}".`,
-                })
-              }
-              className="rounded-none h-12 font-bold uppercase tracking-wider text-sm border-foreground hover:bg-foreground hover:text-background transition-colors"
-            >
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              {t.product.orderButton}
             </Button>
           </div>
         </div>
