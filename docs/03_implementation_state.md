@@ -86,3 +86,45 @@
 
 ## Final screenshots (12:33)
 Desktop: homepage, catalog, product page /faq all render correctly in Swiss style (white canvas, black sans, red accents, sharp borders). Catalog shows 8 mock products with filter sidebar (category/style/material/price slider). Product page shows gallery, specs, estimated price, delivery/install/warranty blocks, "AI-дан сұрау" CTA. Mobile: homepage renders OK; catalog mobile shows filter sidebar as tall column — acceptable but could collapse later. Everything works; proceeding to checkpoint and delivery.
+
+## FREE AI REPLACEMENT (user request, Aug 12)
+User chose option 3: build a fully hand-made rule-based assistant (0 API calls, zero cost), architecture swappable to real LLM (Gemini) later.
+
+### Research findings (free LLM options, kept for future swap)
+- Google Gemini free tier: free input/output tokens on gemini-3.x-flash via aistudio.google.com API key; rate limits ~5-15 RPM free tier; data used to improve models outside EU. https://ai.google.dev/gemini-api/docs/pricing
+- Groq: 30 RPM, 1000/day free (Llama 3.3 70B), OpenAI-compatible. Cerebras ~1M tokens/day free.
+- OpenRouter: 20+ free models, 20 RPM, 50 req/day free.
+- User will later provide a Gemini API key; then use webdev_request_secrets to add GEMINI_API_KEY.
+
+### Plan for rule-based engine (Phase 5 in todo.md)
+1. New file server/routers/rule-chat.ts: rule engine exposing same contract as chat (returns { text, meta }).
+   - Intent detection via bilingual regex keyword patterns (faq lookup, price intent, catalog/products, materials, delivery, install, warranty, payment, deadline/budget collection, contact/name/phone collection, handoff complaint)
+   - Dialog state machine in user session (collected: size, budget, deadline, style, category, name, phone) — implemented as stateless extraction from full message history each turn (history is short)
+   - Handoff: needsHumanHandoff (existing) → meta.handoff + notify_manager call
+   - leadCreated meta + score via scoreLead when phone+interest collected
+   - Pricing via existing calculateKitchenPrice/calculateWardrobePrice functions (no LLM)
+   - FAQ text answers from DB via db query (like keywords)
+2. chat procedure in ai.ts: gate via USE_LLM flag (env var USE_LLM, default "0"); false → rule engine, true → LLM loop (existing)
+3. Frontend unchanged — same chat widget contract
+4. Tests: server/rule-chat.test.ts vitest for intents & flows
+5. Zero external API: verify with test script calling chat endpoint (no BUILT_IN_FORGE_API call when USE_LLM=0)
+
+### Contract of chat endpoint (server/routers/ai.ts ~line 278-386)
+- Input: { messages: [{role:user|assistant|system, content}], lang: "kk"|"ru", productId?: number }
+- Output: { text: string, meta: { handoff?, notifyId?, leadCreated?, leadId?, score?, scoreReason?, askContact?, ... } }
+- Meta keys the widget watches: leadCreated (shows score badge), handoff (shows escalation), askContact (shows lead form).
+- NOTE: currently no code path sets meta.askContact → widget lead form not triggered by backend. Rule engine can add it as improvement.
+
+## Update — Phase 5: Zero-API rule engine (DONE, pending checkpoint)
+
+- User chose option 3: rule-based (hand-built) assistant now + future swap to real LLM via Gemini.
+- New secret `USE_LLM=0` (rule engine) / `=1` (real LLM). Requested via webdev_request_secrets.
+- New file `server/routers/rule-chat.ts`: extractState (phone/name/size/budget/deadline/category/style/doors/delivery/LED, bilingual), INTENT_RULES (handoff top priority, faq_*, calculate, search_products, greeting), FAQ_TEXTS bilingual, ruleChat(messages, lang, productId) → {text, meta{askContact, leadCreated, leadId, score, scoreReason, handoff}}. Uses scoreLead from ai.ts and leads/pricingRules/faqs/products tables; notifyManagerRow from db.ts for handoff.
+- `server/routers/ai.ts` chat procedure now gates on `process.env.USE_LLM === "1"` → ruleChat else LLM loop.
+- `server/rule-chat.test.ts`: 10 new tests; all 31 tests pass (`pnpm test`).
+- Smoke script `scripts/rule-chat-test.mjs` passes all 8 scenarios (greeting RU/KK, price w/o size, kitchen 3m price = 459 000 ₸ breakdown, lead auto-create with warm score, wardrobe, materials FAQ, handoff apology).
+- Bug fixed: after lead auto-creation the response was a generic default → now returns confirmation "Заявка принята..." (RU/KK).
+- Chat widget (AiChatWidget.tsx) already handles meta.askContact/leadCreated/handoff/score — no changes needed.
+- Screenshots: homepage + catalog OK. Known cosmetic: homepage hero text "Жұмыс істейтін ас үй. Тұратын шкаф" — slightly odd hero copy, acceptable placeholder.
+- Leads from smoke tests: ids 90001, 90003 (test artifacts; fine).
+- TODO remaining: final checkpoint + deliver.

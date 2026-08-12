@@ -40,3 +40,11 @@
 - [x] Visual verification of all pages (desktop + mobile)
 - [x] Test AI conversation flows end-to-end
 - [x] Deliver MVP to user
+
+## Phase 5 — Zero-API rule-based assistant (free AI replacement)
+- [ ] Rule-based chat engine on backend: intent detection (keywords, bilingual KK/RU), dialog state machine, FAQ retrieval
+- [x] Rule engine uses same contract as LLM chat (meta: askContact/leadCreated/handoff/score) so frontend stays unchanged
+- [ ] Pricing via existing backend formula only; lead scoring and human handoff preserved
+- [x] Swap flag (e.g. USE_LLM env/setting) to switch back to real LLM (Gemini etc.) later without frontend changes
+- [ ] Vitest coverage for rule engine intents and dialog flows
+- [ ] End-to-end verification: chat works with zero external API calls

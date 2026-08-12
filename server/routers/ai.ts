@@ -7,6 +7,7 @@ import { createLeadRow, getDb, notifyManagerRow } from "../db";
 import { invokeLLM } from "../_core/llm";
 import { SYSTEM_PROMPT, buildToolDefs, buildProductContext, type ToolContext } from "./ai-tools";
 import { handleToolCall } from "./ai-toolcall";
+import { ruleChat } from "./rule-chat";
 
 /* ─────────────────────────────── PRICING ENGINE ─────────────────────────── */
 
@@ -284,6 +285,16 @@ export const aiRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
+      // USE_LLM=1 → real LLM (Gemini etc. via API). USE_LLM=0 → hand-built
+      // rule engine: zero external API calls, zero cost.
+      const useLLM = process.env.USE_LLM === "1";
+      if (!useLLM) {
+        const r = await ruleChat(input.messages, input.lang, input.productId);
+        // Lead form is triggered by the client on meta.askContact; scoring and
+        // handoff are surfaced the same way as the LLM path.
+        return { text: r.text, meta: r.meta } as const;
+      }
+
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
