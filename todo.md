@@ -103,3 +103,18 @@
 - [x] "Біздің жұмыстар" gallery section with 12 real Kaspi project photos, each tile links to Kaspi product page
 - [x] Overall style polish: consistent logo-aligned gold/black/white look, footer links unified gold
 - [x] Verify visually, run tests (tsc 0 errors, vitest 31/31), checkpoint and deliver
+
+## Phase 12 — Kaspi reviews, mobile polish, Excel catalog import (user request)
+
+- [x] Fix nested <a> error on /products/30012 (and audit catalog/product link hierarchy)
+- [x] Parse DERO_мебель_база_данных_Kaspi.xlsx: all products, specs, prices
+- [x] Import all Excel products (bilingual KK/RU) into catalog DB with Kaspi image URLs (377 Kaspi items; 384 total catalog items)
+- [x] Kaspi review blocks on product cards + detail pages: verified rating where supplied, verified review count, and a direct link to the live Kaspi reviews
+- [ ] Add verbatim individual review texts only when an authorized Kaspi review-data source is provided; do not fabricate customer reviews
+- [x] Mobile audit: animations and styles tuned for phone viewport (catalog, product, gallery, chat)
+- [x] Reduce header logo and adjacent DERO MEBEL / MARKET wordmark scale while preserving readability
+- [x] Verify visually (desktop + mobile) and run final tests (TypeScript clean; Vitest 33/33 passing)
+- [ ] Save checkpoint and deliver Phase 12 release
+- [x] Verify all Kaspi-linked catalog entries have populated KK/RU content and a product image URL (377/377 for titles, descriptions, and images; representative CDN checks returned HTTP 200)
+- [x] Verify phone layouts for the product page, works gallery, and sales-chat entry point (375 px captures reviewed: no horizontal overflow; gallery grid and gold chat trigger remain reachable)
+- [x] Ensure the catalog’s default price filter does not hide products above 500,000 ₸ (default view now shows all 384 published items)

@@ -115,27 +115,29 @@ export default function Product() {
 
           {/* ── KASPI REVIEWS BLOCK ─────────────────── */}
           {product.kaspiUrl && (
-            <a
-              href={product.kaspiUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-6 border border-foreground block"
-            >
-              <div className="px-4 py-3 border-b border-foreground flex items-center gap-3">
-                <span className="flex items-center gap-1 text-lg font-black">
-                  {"★★★★★".slice(0, 5)}
-                </span>
-                <span className="text-xs font-bold uppercase tracking-widest">
-                  {t.catalog.kaspiRating}
-                </span>
-                <span className="ml-auto text-xs text-muted-foreground">
-                  {product.kaspiReviews ?? 0} {t.catalog.kaspiReviews} →
+            <section className="mt-6 border border-foreground" aria-label={t.catalog.kaspiRating}>
+              <div className="px-4 py-3 border-b border-foreground flex flex-wrap items-center gap-x-3 gap-y-1">
+                {product.kaspiRating ? <span className="text-lg font-black tracking-tight text-swiss-yellow">★★★★★</span> : null}
+                <span className="text-xs font-bold uppercase tracking-widest">{t.catalog.kaspiRating}</span>
+                {product.kaspiRating ? (
+                  <span className="text-xl font-black">{product.kaspiRating.toFixed(1)}<span className="text-xs font-semibold text-muted-foreground"> / 5</span></span>
+                ) : <span className="text-xs font-semibold text-muted-foreground">{t.catalog.kaspiNoRating}</span>}
+                <span className="ml-auto text-xs font-bold text-muted-foreground">
+                  {product.kaspiReviews ?? 0} {t.catalog.kaspiReviews}
                 </span>
               </div>
-              <p className="px-4 py-3 text-xs text-muted-foreground leading-relaxed">
-                {t.catalog.kaspiMerchantNote}
-              </p>
-            </a>
+              <div className="px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs text-muted-foreground leading-relaxed">{product.kaspiReviews ? t.catalog.kaspiMerchantNote : t.catalog.kaspiNoReviews}</p>
+                <a
+                  href={product.kaspiUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 text-xs font-bold uppercase tracking-widest text-swiss-yellow-dark hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-swiss-yellow"
+                >
+                  {t.catalog.kaspiReadReviews} →
+                </a>
+              </div>
+            </section>
           )}
 
           <div className="divide-y divide-foreground/30 border border-foreground">

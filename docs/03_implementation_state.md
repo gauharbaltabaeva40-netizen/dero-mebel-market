@@ -262,3 +262,11 @@ REMAINING Phase 10:
 - [ ] Home.tsx contact section: add Kaspi link
 - [ ] Check rule-chat.ts knowledge base knows Kaspi store (optional)
 - [ ] pnpm test + tsc, checkpoint, deliver
+
+## Phase 12 final verification (Aug 12, 2026)
+
+- **Desktop review:** `/`, `/catalog`, and `/products/30012` render with the smaller logo/wordmark, the four-sided frame, Kaspi data panels, and intact product cards. The catalog’s initial price ceiling was corrected after the audit so it now reports **384 results** rather than hiding the four products priced above 500,000 ₸.
+- **Mobile review at 375 px:** `/catalog` keeps the compact header and a vertically scrollable filter panel; `/products/30012` keeps the product image, verified Kaspi rating/review-information panel, direct Kaspi purchase CTA, and complete footer within the narrow column without horizontal overflow. The floating gold chat trigger was visible and reachable in the normal phone captures.
+- **Works gallery:** the full mobile home-page capture shows the 12 real Kaspi project photos in a compact responsive grid; all gallery cards and section dividers remain inside the page frame.
+- **Runtime review:** new desktop/mobile captures produced no fresh browser-console errors after 18:45; the historical nested-anchor error remains only in the earlier log record from 18:14. The catalog markup now uses an `article` with independent internal links rather than nested anchors.
+- **Automated checks:** `pnpm exec tsc --noEmit` completed with zero errors; `pnpm test` completed with 33/33 passing tests, including two regression tests covering the no-price-limit initial catalog state.

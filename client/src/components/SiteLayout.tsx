@@ -27,24 +27,24 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col bg-muted/50">
       {/* Four-sided page frame: outer padding on all sides */}
-      <div className="flex-1 flex flex-col m-2 md:m-4 lg:m-6">
+      <div className="flex-1 flex flex-col m-1 sm:m-2 md:m-4 lg:m-6">
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border border-foreground">
         {/* Centered branding: official logo image + wordmark */}
-        <div className="container flex items-center justify-center gap-4 md:gap-6 py-2">
+        <div className="container flex items-center justify-center gap-2 sm:gap-3 py-1.5 sm:py-2">
           <img
             src={LOGO_URL}
             alt="Dero Mebel Market"
-            className="h-16 md:h-20 w-auto object-contain"
+            className="h-10 sm:h-12 md:h-14 w-auto object-contain"
           />
           <div className="flex flex-col leading-none select-none">
             <span
-              className="text-2xl md:text-3xl font-black tracking-[0.18em]"
+              className="text-xs sm:text-sm md:text-lg font-black tracking-[0.13em] sm:tracking-[0.16em]"
               style={{ color: "var(--foreground)", fontFamily: "'Inter', sans-serif" }}
             >
               DERO MEBEL
             </span>
             <span
-              className="text-2xl md:text-3xl font-black tracking-[0.18em] mt-0.5"
+              className="text-xs sm:text-sm md:text-lg font-black tracking-[0.13em] sm:tracking-[0.16em] mt-0.5"
               style={{ color: "var(--swiss-yellow)", fontFamily: "'Inter', sans-serif" }}
             >
               MARKET
@@ -52,13 +52,13 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        <div className="container flex items-center justify-center gap-8 h-14 border-t border-foreground/30">
-          <nav className="flex items-center gap-8">
+        <div className="container flex items-center gap-2 sm:gap-6 h-11 sm:h-12 border-t border-foreground/30">
+          <nav className="flex min-w-0 flex-1 items-center gap-3 sm:gap-6 overflow-x-auto whitespace-nowrap no-scrollbar">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-sm font-semibold uppercase tracking-wider transition-colors duration-150 border-b-2 pb-0.5 ${
+                className={`text-[10px] sm:text-sm font-semibold uppercase tracking-wider transition-colors duration-150 border-b-2 pb-0.5 ${
                   location === item.href
                     ? "border-swiss-yellow text-foreground"
                     : "border-transparent text-muted-foreground hover:text-foreground hover:border-foreground/30"
@@ -69,10 +69,10 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
             ))}
           </nav>
 
-          <div className="flex border border-foreground text-xs font-bold uppercase">
+          <div className="flex shrink-0 border border-foreground text-[10px] sm:text-xs font-bold uppercase">
             <button
               onClick={() => setLang("kk")}
-              className={`px-2.5 py-1 transition-colors duration-150 ${
+              className={`px-2 py-1 transition-colors duration-150 ${
                 lang === "kk" ? "bg-foreground text-background" : "hover:bg-muted"
               }`}
             >
@@ -80,7 +80,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
             </button>
             <button
               onClick={() => setLang("ru")}
-              className={`px-2.5 py-1 transition-colors duration-150 border-l border-foreground ${
+              className={`px-2 py-1 transition-colors duration-150 border-l border-foreground ${
                 lang === "ru" ? "bg-foreground text-background" : "hover:bg-muted"
               }`}
             >

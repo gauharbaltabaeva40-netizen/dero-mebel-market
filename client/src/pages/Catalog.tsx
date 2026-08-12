@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useLang, styleTag } from "@/contexts/LanguageContext";
 import { fmtPrice } from "@/lib/format";
+import { isWithinPriceLimit } from "@/lib/catalogFilters";
 import { useOpenChat } from "@/components/AiChatWidget";
 
 export default function Catalog() {
@@ -19,7 +20,8 @@ export default function Catalog() {
   );
   const [style, setStyle] = useState<string>("all");
   const [material, setMaterial] = useState<string>("all");
-  const [maxPrice, setMaxPrice] = useState<number>(500000);
+  // Null means no ceiling: the first catalog view must include every published product.
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
 
   const { data: products, isLoading } = trpc.products.list.useQuery();
 
@@ -43,7 +45,7 @@ export default function Catalog() {
       if (category && p.category !== category) return false;
       if (style !== "all" && p.style !== style) return false;
       if (material !== "all" && p.material !== material) return false;
-      if (p.basePriceKzt > maxPrice) return false;
+      if (!isWithinPriceLimit(p.basePriceKzt, maxPrice)) return false;
       return true;
     });
   }, [products, category, style, material, maxPrice]);
@@ -62,20 +64,20 @@ export default function Catalog() {
       <div className="grid lg:grid-cols-12 gap-10">
         {/* ── FILTER SIDEBAR ─────────────────────────── */}
         <aside className="lg:col-span-3">
-          <div className="border border-foreground sticky top-24">
+          <div className="border border-foreground lg:sticky lg:top-24">
             <div className="flex items-center gap-3 px-4 py-3 border-b border-foreground">
               <Filter className="w-4 h-4" />
               <span className="font-bold text-sm uppercase tracking-widest">{t.catalog.filters}</span>
             </div>
 
-            <div className="p-4 space-y-6">
+            <div className="p-4 space-y-6 max-h-72 overflow-y-auto overscroll-contain lg:max-h-none lg:overflow-visible">
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest mb-3 text-muted-foreground">
                   {t.catalog.category}
                 </p>
-                <div className="flex flex-col gap-1">
-                  {[
-                    { value: null as string | null, label: t.catalog.all },
+                  <div className="flex flex-col gap-1 max-h-44 overflow-y-auto overscroll-contain">
+                    {[
+                      { value: null as string | null, label: t.catalog.all },
                     { value: "kitchen", label: t.home.catKitchen },
                     { value: "wardrobe", label: t.home.catWardrobe },
                   ].map((opt) => (
@@ -98,9 +100,9 @@ export default function Catalog() {
                 <p className="text-xs font-bold uppercase tracking-widest mb-3 text-muted-foreground">
                   {t.catalog.style}
                 </p>
-                <div className="flex flex-col gap-1">
-                  <button
-                    onClick={() => setStyle("all")}
+                  <div className="flex flex-col gap-1 max-h-44 overflow-y-auto overscroll-contain">
+                    <button
+                      onClick={() => setStyle("all")}
                     className={`text-left px-3 py-2 text-sm font-semibold transition-colors ${
                       style === "all" ? "bg-foreground text-background" : "hover:bg-muted"
                     }`}
@@ -125,9 +127,9 @@ export default function Catalog() {
                 <p className="text-xs font-bold uppercase tracking-widest mb-3 text-muted-foreground">
                   {t.catalog.material}
                 </p>
-                <div className="flex flex-col gap-1">
-                  <button
-                    onClick={() => setMaterial("all")}
+                  <div className="flex flex-col gap-1 max-h-44 overflow-y-auto overscroll-contain">
+                    <button
+                      onClick={() => setMaterial("all")}
                     className={`text-left px-3 py-2 text-sm font-semibold transition-colors ${
                       material === "all" ? "bg-foreground text-background" : "hover:bg-muted"
                     }`}
@@ -153,13 +155,15 @@ export default function Catalog() {
                   {t.catalog.price}
                 </p>
                 <Slider
-                  value={[maxPrice]}
+                  value={[maxPrice ?? Math.max(maxCatalogPrice, 300000)]}
                   min={100000}
                   max={Math.max(maxCatalogPrice, 300000)}
                   step={10000}
                   onValueChange={(v) => setMaxPrice(v[0])}
                 />
-                <p className="text-sm font-bold mt-3">{fmtPrice(maxPrice)}</p>
+                <p className="text-sm font-bold mt-3">
+                  {fmtPrice(maxPrice ?? Math.max(maxCatalogPrice, 300000))}
+                </p>
               </div>
             </div>
           </div>
@@ -191,12 +195,9 @@ export default function Catalog() {
               </p>
               <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-px bg-foreground/40">
                 {filtered.map((p) => (
-                  <Link
-                    key={p.id}
-                    href={`/products/${p.id}`}
-                    className="group bg-background flex flex-col"
-                  >
-                    <div className="aspect-[4/3] overflow-hidden border-b border-foreground relative">
+                  <article key={p.id} className="group bg-background flex flex-col min-w-0">
+                    <Link href={`/products/${p.id}`} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-swiss-yellow focus-visible:ring-inset">
+                      <div className="aspect-[4/3] overflow-hidden border-b border-foreground relative">
                       <img
                         src={p.photoUrl}
                         alt={lang === "kk" ? p.nameKk : p.nameRu}
@@ -210,14 +211,15 @@ export default function Catalog() {
                           ★ {t.catalog.kaspiBadge}
                         </span>
                       )}
-                    </div>
+                      </div>
+                    </Link>
                     <div className="p-4 flex flex-col flex-1">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
                         {p.category === "kitchen" ? t.home.catKitchen : t.home.catWardrobe}
                       </p>
-                      <h3 className="font-bold text-base leading-snug mb-3 flex-1">
+                      <Link href={`/products/${p.id}`} className="font-bold text-base leading-snug mb-3 flex-1 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-swiss-yellow">
                         {lang === "kk" ? p.nameKk : p.nameRu}
-                      </h3>
+                      </Link>
                       <div className="flex items-end justify-between border-t border-foreground/30 pt-3">
                         <div>
                           <p className="text-[10px] uppercase text-muted-foreground tracking-widest">
@@ -232,10 +234,15 @@ export default function Catalog() {
                             )}
                           </p>
                         </div>
-                        {p.kaspiReviews ? (
-                          <p className="text-[10px] text-muted-foreground font-semibold text-right leading-tight">
-                            {p.kaspiReviews} {t.catalog.kaspiReviews}
-                          </p>
+                        {p.kaspiReviews || p.kaspiRating ? (
+                          <div className="text-right leading-tight">
+                            <p className="text-xs font-black text-foreground">
+                              <span className="text-swiss-yellow">★</span> {p.kaspiRating ? p.kaspiRating.toFixed(1) : "—"}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground font-semibold">
+                              {p.kaspiReviews ?? 0} {t.catalog.kaspiReviews}
+                            </p>
+                          </div>
                         ) : null}
                       </div>
                       {p.kaspiUrl ? (
@@ -243,22 +250,20 @@ export default function Catalog() {
                           href={p.kaspiUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="mt-3 bg-swiss-yellow hover:bg-swiss-yellow/90 text-black text-xs font-bold uppercase tracking-widest px-3 py-2.5 text-center transition-colors active:scale-[0.97]"
+                          className="mt-3 bg-swiss-yellow hover:bg-swiss-yellow/90 text-black text-xs font-bold uppercase tracking-widest px-3 py-2.5 text-center transition-colors active:scale-[0.97] touch-manipulation"
                         >
                           {t.catalog.buyKaspi}
                         </a>
                       ) : (
                         <Link
                           href={`/products/${p.id}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="mt-3 border border-foreground text-xs font-bold uppercase tracking-widest px-3 py-2.5 text-center hover:bg-foreground hover:text-background transition-colors"
+                          className="mt-3 border border-foreground text-xs font-bold uppercase tracking-widest px-3 py-2.5 text-center hover:bg-foreground hover:text-background transition-colors active:scale-[0.97] touch-manipulation"
                         >
                           {lang === "kk" ? "Толығырақ" : "Подробнее"}
                         </Link>
                       )}
                     </div>
-                  </Link>
+                  </article>
                 ))}
               </div>
             </>

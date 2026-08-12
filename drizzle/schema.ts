@@ -65,6 +65,8 @@ export const products = mysqlTable("products", {
   kaspiUrl: varchar("kaspiUrl", { length: 512 }),
   /** Real review count from the Kaspi product page. */
   kaspiReviews: int("kaspiReviews"),
+  /** Average rating from the Kaspi product export supplied by the store owner. */
+  kaspiRating: float("kaspiRating"),
   isPublished: boolean("isPublished").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
