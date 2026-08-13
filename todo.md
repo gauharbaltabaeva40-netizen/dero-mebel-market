@@ -248,3 +248,9 @@
 - [x] Set the official logo as favicon and add crawler-visible search metadata
 - [x] Add regression coverage and verify desktop/375 px image discovery, filters, ordering, navigation, and metadata (TypeScript clean; Vitest 51/51; local-image preview, zero-cost style prompt, KK/RU room and style filters, audited Kaspi order button, navigation, favicon, and schema metadata verified)
 - [x] Save checkpoint and deliver the image discovery and catalog update
+
+## Phase 23 — GitHub source export (user request)
+
+- [x] Inspect the current Git repository and remote configuration (main branch; connected GitHub account: gauharbaltabaeva40-netizen)
+- [ ] Create or select a private GitHub repository and push the current source code
+- [ ] Verify the GitHub repository contents and deliver its link
