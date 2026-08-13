@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import type { ReactNode } from "react";
 import { useLang } from "@/contexts/LanguageContext";
-import { ChatTrigger } from "@/components/AiChatWidget";
+import { ChatTrigger, useChat } from "@/components/AiChatWidget";
 
 /**
  * Swiss-style layout: top thin black border, uppercase navigation,
@@ -16,12 +16,12 @@ const LOGO_URL = "/manus-storage/dero-mebel-logo_6177e179.png";
 export default function SiteLayout({ children }: { children: ReactNode }) {
   const { t, lang, setLang } = useLang();
   const [location] = useLocation();
+  const { openChat } = useChat();
 
   const navItems = [
     { href: "/", label: t.nav.home },
     { href: "/catalog", label: t.nav.catalog },
     { href: "/faq", label: t.nav.faq },
-    { href: "/#contact", label: t.nav.contact },
   ];
 
   return (
@@ -54,6 +54,13 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
                 {item.label}
               </Link>
             ))}
+            <button
+              type="button"
+              onClick={() => openChat()}
+              className="rounded-full px-1 py-1 text-[9px] font-bold uppercase tracking-wider text-foreground/65 transition-colors duration-150 hover:bg-foreground/8 hover:text-foreground sm:px-2 sm:text-xs"
+            >
+              DERO AI
+            </button>
           </nav>
 
           <div className="flex shrink-0 overflow-hidden rounded-full border border-foreground/30 bg-background/65 text-[9px] sm:text-[10px] font-bold uppercase">
@@ -88,8 +95,8 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
             </div>
             <p className="text-sm text-background/70 max-w-xs">
               {lang === "kk"
-                ? "Астанада ас үй жиһаздары мен шкафтарды өз өндірісімізде жасаймыз."
-                : "Изготавливаем кухни и шкафы в собственном производстве в Астане."}
+                ? "Астанада ас үй, шкаф және үйге арналған жеке жиһазды өз өндірісімізде жасаймыз."
+                : "Изготавливаем кухни, шкафы и индивидуальную мебель для дома в собственном производстве в Астане."}
             </p>
             <div className="mt-4 flex flex-col gap-2 text-xs font-bold uppercase tracking-wider">
               <a
@@ -100,15 +107,6 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
                 style={{ color: "var(--swiss-yellow)" }}
               >
                 Instagram →
-              </a>
-              <a
-                href="https://kaspi.kz/shop/m/30234153"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-block hover:underline hover:text-background transition-colors"
-                style={{ color: "var(--swiss-yellow)" }}
-              >
-                Kaspi.kz →
               </a>
             </div>
           </div>
@@ -138,15 +136,6 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
                 style={{ color: "var(--swiss-yellow)" }}
               >
                 Instagram: @deromebel_market
-              </a>
-              <a
-                href="https://kaspi.kz/shop/m/30234153"
-                target="_blank"
-                rel="noreferrer"
-                className="block hover:underline hover:text-background transition-colors"
-                style={{ color: "var(--swiss-yellow)" }}
-              >
-                Kaspi.kz — DERO мебель
               </a>
               <p className="text-background/60">Астана, Керей хан 27</p>
               <p className="text-background/60">10:00–20:00</p>

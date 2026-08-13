@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useLang, styleTag } from "@/contexts/LanguageContext";
 import { fmtPrice } from "@/lib/format";
-import { type DimensionRange, isWithinDimensionRange, isWithinPriceLimit } from "@/lib/catalogFilters";
+import { type DimensionRange, fromMillimeters, isAvailableForOrder, isWithinDimensionRange, isWithinPriceLimit, toMillimeters } from "@/lib/catalogFilters";
 import { useOpenChat } from "@/components/AiChatWidget";
 
 export default function Catalog() {
@@ -25,6 +25,8 @@ export default function Catalog() {
   const [widthRange, setWidthRange] = useState<DimensionRange>(null);
   const [heightRange, setHeightRange] = useState<DimensionRange>(null);
   const [depthRange, setDepthRange] = useState<DimensionRange>(null);
+  const [availableOnly, setAvailableOnly] = useState(false);
+  const [dimensionUnit, setDimensionUnit] = useState<"mm" | "cm">("mm");
 
   const { data: products, isLoading } = trpc.products.list.useQuery();
 
@@ -48,13 +50,14 @@ export default function Catalog() {
       if (category && p.category !== category) return false;
       if (style !== "all" && p.style !== style) return false;
       if (material !== "all" && p.material !== material) return false;
+      if (availableOnly && !isAvailableForOrder(p.availability)) return false;
       if (!isWithinPriceLimit(p.basePriceKzt, maxPrice)) return false;
       if (!isWithinDimensionRange(p.widthMm, widthRange)) return false;
       if (!isWithinDimensionRange(p.heightMm, heightRange)) return false;
       if (!isWithinDimensionRange(p.depthMm, depthRange)) return false;
       return true;
     });
-  }, [products, category, style, material, maxPrice, widthRange, heightRange, depthRange]);
+  }, [products, category, style, material, availableOnly, maxPrice, widthRange, heightRange, depthRange]);
 
   const maxCatalogPrice = useMemo(() => {
     if (!products) return 300000;
@@ -70,6 +73,7 @@ export default function Catalog() {
     { key: "height", label: t.catalog.height, maximum: dimensionMaximums.height, range: heightRange, setRange: setHeightRange },
     { key: "depth", label: t.catalog.depth, maximum: dimensionMaximums.depth, range: depthRange, setRange: setDepthRange },
   ];
+  const dimensionScale = dimensionUnit === "cm" ? 10 : 1;
   const clearDimensions = () => {
     setWidthRange(null);
     setHeightRange(null);
@@ -172,6 +176,19 @@ export default function Catalog() {
               </div>
 
               <div>
+                <p className="mb-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">{t.catalog.availability}</p>
+                <button
+                  type="button"
+                  aria-pressed={availableOnly}
+                  onClick={() => setAvailableOnly((current) => !current)}
+                  className={`w-full border px-3 py-2 text-left text-sm font-semibold transition-colors ${availableOnly ? "border-foreground bg-foreground text-background" : "border-foreground/45 hover:bg-muted"}`}
+                >
+                  {t.catalog.availableOnly}
+                </button>
+                <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">{t.catalog.madeToOrder}</p>
+              </div>
+
+              <div>
                 <p className="text-xs font-bold uppercase tracking-widest mb-3 text-muted-foreground">
                   {t.catalog.price}
                 </p>
@@ -189,7 +206,10 @@ export default function Catalog() {
 
               <div>
                 <div className="flex items-center justify-between gap-3 mb-3">
-                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t.catalog.dimensions}</p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t.catalog.dimensions}</p>
+                    <button type="button" onClick={() => setDimensionUnit((unit) => unit === "mm" ? "cm" : "mm")} className="border border-foreground/35 px-1.5 py-0.5 text-[10px] font-black uppercase text-foreground transition-colors hover:bg-foreground hover:text-background">{dimensionUnit === "mm" ? t.catalog.unitCm : t.catalog.unitMm}</button>
+                  </div>
                   {(widthRange || heightRange || depthRange) && (
                     <button onClick={clearDimensions} className="text-[10px] font-bold uppercase tracking-widest text-swiss-yellow-dark hover:underline">
                       {t.catalog.clearSize}
@@ -198,20 +218,25 @@ export default function Catalog() {
                 </div>
                 <div className="space-y-5">
                   {dimensions.map((dimension) => {
-                    const selected = Array.from(dimension.range ?? [0, dimension.maximum]);
+                    const selectedMm = Array.from(dimension.range ?? [0, dimension.maximum]);
+                    const maximum = fromMillimeters(dimension.maximum, dimensionUnit);
+                    const selected = selectedMm.map((value) => fromMillimeters(value, dimensionUnit));
                     return (
                       <div key={dimension.key}>
                         <div className="mb-2 flex items-baseline justify-between gap-3">
                           <span className="text-xs font-bold">{dimension.label}</span>
-                          <span className="text-[10px] font-semibold text-muted-foreground tabular-nums">{selected[0]}–{selected[1]} мм</span>
+                          <span className="text-[10px] font-semibold text-muted-foreground tabular-nums">{selected[0]}–{selected[1]} {dimensionUnit === "mm" ? t.catalog.unitMm : t.catalog.unitCm}</span>
                         </div>
                         <Slider
                           value={selected}
                           min={0}
-                          max={dimension.maximum}
-                          step={10}
+                          max={maximum}
+                          step={dimensionUnit === "mm" ? 10 : 1}
                           minStepsBetweenThumbs={1}
-                          onValueChange={(value) => dimension.setRange(value[0] === 0 && value[1] === dimension.maximum ? null : [value[0], value[1]])}
+                          onValueChange={(value) => {
+                            const selectedRange: [number, number] = [toMillimeters(value[0], dimensionUnit), toMillimeters(value[1], dimensionUnit)];
+                            dimension.setRange(value[0] === 0 && value[1] === maximum ? null : selectedRange);
+                          }}
                           aria-label={dimension.label}
                         />
                       </div>
@@ -239,7 +264,7 @@ export default function Catalog() {
                 onClick={() => openChat({})}
                 className="bg-swiss-yellow hover:bg-swiss-yellow/90 text-black rounded-none"
               >
-                AI
+                {t.chat.title}
               </Button>
             </div>
           ) : (
@@ -260,16 +285,14 @@ export default function Catalog() {
                       <span className="absolute top-3 left-3 bg-background border border-foreground px-2 py-1 text-[10px] font-bold uppercase tracking-widest">
                         {styleTag(p.style, t)}
                       </span>
-                      {p.kaspiUrl && p.kaspiVerified && (
-                        <span className="absolute top-3 right-3 bg-swiss-yellow text-black px-2 py-1 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
-                          ★ {t.catalog.kaspiBadge}
-                        </span>
-                      )}
                       </div>
                     </Link>
                     <div className="p-4 flex flex-col flex-1">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
                         {p.category === "kitchen" ? t.home.catKitchen : t.home.catWardrobe}
+                      </p>
+                      <p className={`mb-2 text-[10px] font-bold uppercase tracking-widest ${p.availability === "unavailable" ? "text-destructive" : "text-swiss-yellow-dark"}`}>
+                        {p.availability === "in_stock" ? t.catalog.inStock : p.availability === "unavailable" ? t.catalog.unavailable : t.catalog.madeToOrder}
                       </p>
                       <Link href={`/products/${p.id}`} className="font-bold text-base leading-snug mb-3 flex-1 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-swiss-yellow">
                         {lang === "kk" ? p.nameKk : p.nameRu}
@@ -299,30 +322,12 @@ export default function Catalog() {
                           </div>
                         ) : null}
                       </div>
-                      {p.kaspiUrl && p.kaspiVerified ? (
-                        <a
-                          href={p.kaspiUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-3 bg-swiss-yellow hover:bg-swiss-yellow/90 text-black text-xs font-bold uppercase tracking-widest px-3 py-2.5 text-center transition-colors active:scale-[0.97] touch-manipulation"
-                        >
-                          {t.catalog.buyKaspi}
-                        </a>
-                      ) : (
-                        <div className="mt-3">
-                          <Link
-                            href={`/products/${p.id}`}
-                            className="block border border-foreground text-xs font-bold uppercase tracking-widest px-3 py-2.5 text-center hover:bg-foreground hover:text-background transition-colors active:scale-[0.97] touch-manipulation"
-                          >
-                            {lang === "kk" ? "Толығырақ" : "Подробнее"}
-                          </Link>
-                          {p.kaspiUrl && (
-                            <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
-                              {lang === "kk" ? "Kaspi-дегі тікелей сілтеме қазір тексерілуде." : "Прямая ссылка Kaspi сейчас проверяется."}
-                            </p>
-                          )}
-                        </div>
-                      )}
+                      <Link
+                        href={`/products/${p.id}`}
+                        className="mt-3 block border border-foreground px-3 py-2.5 text-center text-xs font-bold uppercase tracking-widest transition-colors hover:bg-foreground hover:text-background active:scale-[0.97] touch-manipulation"
+                      >
+                        {lang === "kk" ? "Толығырақ" : "Подробнее"}
+                      </Link>
                     </div>
                   </article>
                 ))}

@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight, ExternalLink, MessageCircle, RotateCcw, Send, Sparkles, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageCircle, RotateCcw, Send, Sparkles, X } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { trpc } from "@/lib/trpc";
-import { isBudgetQuickReply, isColorQuickReply, isMaterialQuickReply, resolveChatProductAction } from "@/lib/chatProductActions";
+import { isBudgetQuickReply, isCategoryQuickReply, isColorQuickReply, isMaterialQuickReply, resolveChatProductAction } from "@/lib/chatProductActions";
 import { remainingTypingDuration } from "@/lib/chatTyping";
 import { useLang } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -47,8 +47,8 @@ const ChatContext = createContext<ChatContextValue>({
 });
 
 const greetings = {
-  kk: "Сәлем! Мен Dero Mebel сату ассистентімін. Ас үй немесе шкафты таңдап, сізді Kaspi-дегі нақты сатып алу бетіне апарамын. Нені іздеп жүрсіз?",
-  ru: "Здравствуйте! Я ассистент по продажам Dero Mebel. Помогу выбрать кухню или шкаф и переведу на страницу покупки конкретного товара в Kaspi. Что вы ищете?",
+  kk: "Сәлем! Мен — DERO AI. Жиһаздың түрін, өлшемін, түсін, материалын және бюджетіңізді нақтылап, сізге сай үлгілерді көрсетемін. Неден бастаймыз?",
+  ru: "Здравствуйте! Я — DERO AI. Уточню тип мебели, размеры, цвет, материал и бюджет, а затем покажу подходящие модели. С чего начнём?",
 };
 
 const starterActions = {
@@ -93,7 +93,7 @@ function useChatBackend() {
 }
 
 function formatPrice(price: number | null | undefined, lang: "kk" | "ru") {
-  if (price == null) return lang === "kk" ? "Бағасы Kaspi-де" : "Цена на Kaspi";
+  if (price == null) return lang === "kk" ? "Бағасы карточкада нақтыланады" : "Цена уточняется в карточке";
   return `${price.toLocaleString(lang === "kk" ? "kk-KZ" : "ru-RU")} ₸`;
 }
 
@@ -133,9 +133,8 @@ function ProductPreviewCarousel({
                 <p className="line-clamp-2 text-xs font-bold leading-snug">{name}</p>
                 {description && <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-foreground/65">{description}</p>}
                 <p className="mt-2 text-[11px] font-black" style={{ color: "var(--swiss-yellow-dark)" }}>{formatPrice(product.basePriceKzt, lang)}</p>
-                <a href={action.href} target={action.target} rel={action.isPurchase ? "noopener noreferrer" : undefined} className="mt-2 flex h-8 items-center justify-center gap-1 bg-foreground px-2 text-[10px] font-black uppercase tracking-wide text-background transition-opacity hover:opacity-75">
-                  {action.isPurchase ? (lang === "kk" ? "Kaspi-дан сатып алу" : "Купить на Kaspi") : (lang === "kk" ? "Үлгіні таңдау" : "Выбрать модель")}
-                  {action.isPurchase && <ExternalLink className="size-3" />}
+                <a href={action.href} className="mt-2 flex h-8 items-center justify-center gap-1 bg-foreground px-2 text-[10px] font-black uppercase tracking-wide text-background transition-opacity hover:opacity-75">
+                  {lang === "kk" ? "Үлгіні қарау" : "Смотреть модель"}
                 </a>
               </div>
             </article>
@@ -226,17 +225,17 @@ function AiChatWidget({
 
   return (
     <div
-      className={`fixed bottom-3 right-3 z-50 flex flex-col items-end transition-all duration-300 md:bottom-5 md:right-5 ${open ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}
+      className={`fixed inset-0 z-[60] flex transition-all duration-300 ${open ? "opacity-100" : "pointer-events-none opacity-0"}`}
       style={{ transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)" }}
     >
       {open && (
-        <section className="mb-3 flex h-[min(760px,calc(100dvh-1.5rem))] w-[calc(100vw-1.5rem)] flex-col border-2 border-foreground bg-background shadow-[6px_6px_0_0_rgba(0,0,0,0.9)] sm:w-[min(560px,calc(100vw-2.5rem))] lg:w-[min(620px,calc(100vw-3rem))]" aria-label={t.chat.title}>
-          <header className="flex items-center justify-between border-b-2 border-foreground bg-foreground px-4 py-3 text-background">
+        <section className="flex h-[100dvh] w-full flex-col bg-background" aria-label={t.chat.title}>
+          <header className="flex items-center justify-between border-b-2 border-foreground bg-foreground px-4 py-3 text-background sm:px-6">
             <div className="flex items-center gap-3">
               <span className="inline-flex size-5 items-center justify-center" style={{ backgroundColor: "var(--swiss-yellow)" }}><Sparkles className="size-3 text-background" /></span>
               <div>
                 <p className="text-sm font-black uppercase tracking-wide">{t.chat.title}</p>
-                <p className="text-[10px] opacity-70">{lang === "kk" ? "Kaspi-ге тікелей сатып алу" : "Прямая покупка через Kaspi"}</p>
+                <p className="text-[10px] opacity-70">{lang === "kk" ? "Параметрлер бойынша жеке іріктеу" : "Персональный подбор по параметрам"}</p>
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -245,11 +244,11 @@ function AiChatWidget({
             </div>
           </header>
 
-          <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-4">
+          <div ref={scrollRef} className="mx-auto flex w-full max-w-5xl flex-1 flex-col space-y-4 overflow-y-auto p-4 sm:p-6">
             {messages.map((message, index) => (
               <div key={`${message.role}-${index}`} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                 {message.role === "assistant" && <span className="swiss-square mr-2 mt-1 size-4 shrink-0" />}
-                <div className={`max-w-[86%] px-3.5 py-2.5 text-sm leading-relaxed ${message.role === "user" ? "bg-foreground text-background" : "border border-foreground bg-background"}`}>
+                <div className={`max-w-[92%] px-3.5 py-2.5 text-sm leading-relaxed sm:max-w-[78%] ${message.role === "user" ? "bg-foreground text-background" : "border border-foreground bg-background"}`}>
                   <Streamdown>{message.content}</Streamdown>
 
                   {message.meta?.recommendedProducts && message.meta.recommendedProducts.length > 0 && (
@@ -259,7 +258,7 @@ function AiChatWidget({
                   {message.meta?.quickReplies && message.meta.quickReplies.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1.5 border-t border-foreground/20 pt-3">
                       {message.meta.quickReplies.map((reply) => {
-                        const replyType = isBudgetQuickReply(reply) ? "budget" : isColorQuickReply(reply) ? "color" : isMaterialQuickReply(reply) ? "material" : "general";
+                        const replyType = isBudgetQuickReply(reply) ? "budget" : isColorQuickReply(reply) ? "color" : isMaterialQuickReply(reply) ? "material" : isCategoryQuickReply(reply) ? "category" : "general";
                         return <button key={reply} onClick={() => sendMessage(reply)} disabled={chatMutation.isPending} data-chat-reply-type={replyType} className="border border-foreground/50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide transition-colors hover:bg-foreground hover:text-background disabled:opacity-50">{reply}</button>;
                       })}
                     </div>
@@ -279,12 +278,12 @@ function AiChatWidget({
           </div>
 
           {messages.length <= 1 && (
-            <div className="flex flex-wrap gap-1.5 border-t border-foreground/30 px-4 py-2">
+            <div className="mx-auto flex w-full max-w-5xl flex-wrap gap-1.5 border-t border-foreground/30 px-4 py-2 sm:px-6">
               {starterActions[lang].map((action) => <button key={action} onClick={() => sendMessage(action)} disabled={chatMutation.isPending} className="border border-foreground/50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide transition-colors hover:bg-foreground hover:text-background disabled:opacity-50">{action}</button>)}
             </div>
           )}
 
-          <form onSubmit={(event) => { event.preventDefault(); sendMessage(input); }} className="flex gap-2 border-t-2 border-foreground p-3">
+          <form onSubmit={(event) => { event.preventDefault(); sendMessage(input); }} className="mx-auto flex w-full max-w-5xl gap-2 border-t-2 border-foreground p-3 sm:px-6">
             <Input value={input} onChange={(event) => setInput(event.target.value)} placeholder={t.chat.placeholder} className="h-10 rounded-none text-sm" disabled={chatMutation.isPending} />
             <Button type="submit" size="icon" disabled={chatMutation.isPending || !input.trim()} className="rounded-none text-primary-foreground transition-transform active:scale-95" style={{ backgroundColor: "var(--swiss-yellow)", color: "#000" }}><Send className="size-4" /></Button>
           </form>
@@ -305,14 +304,16 @@ export function ChatTrigger() {
     return () => window.removeEventListener("dero-chat-state", handleState);
   }, []);
 
+  if (isOpen) return null;
   return (
     <button
-      onClick={() => isOpen ? closeChat() : openChat()}
-      className={`fixed bottom-5 right-5 z-50 flex size-14 items-center justify-center transition-transform duration-200 active:scale-90 ${isOpen ? "bg-foreground text-background" : "text-primary-foreground hover:scale-105"}`}
-      style={{ backgroundColor: isOpen ? undefined : "var(--swiss-yellow)", boxShadow: "3px 3px 0 0 rgba(0,0,0,0.9)" }}
+      onClick={() => openChat()}
+      className="fixed bottom-5 right-5 z-50 flex min-h-14 flex-col items-center justify-center gap-0.5 px-3 text-primary-foreground transition-transform duration-200 hover:scale-105 active:scale-90"
+      style={{ backgroundColor: "var(--swiss-yellow)", boxShadow: "3px 3px 0 0 rgba(0,0,0,0.9)" }}
       aria-label={t.chat.title}
     >
-      {isOpen ? <X className="size-5" /> : <MessageCircle className="size-6" />}
+      <MessageCircle className="size-5" />
+      <span className="text-[9px] font-black uppercase tracking-[0.12em] text-black">DERO AI</span>
     </button>
   );
 }

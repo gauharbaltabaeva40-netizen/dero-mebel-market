@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { ruleChat } from "./routers/rule-chat";
 
-describe("ruleChat product-context payment routing", () => {
-  it("returns one exact Kaspi product and a buy action for the active product page", async () => {
+describe("ruleChat product-context routing", () => {
+  it("returns the active product for in-site selection without a direct marketplace action", async () => {
     const result = await ruleChat(
       [{ role: "user", content: "Kaspi арқылы сатып алу" }],
       "kk",
       30012,
     );
 
-    expect(result.meta.productAction).toBe("buy");
+    expect(result.meta.productAction).toBe("select");
     expect(result.meta.recommendedProducts).toHaveLength(1);
     expect(result.meta.recommendedProducts?.[0]).toMatchObject({
       id: 30012,

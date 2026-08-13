@@ -69,6 +69,8 @@ export const products = mysqlTable("products", {
   kaspiReviews: int("kaspiReviews"),
   /** Average rating from the Kaspi product export supplied by the store owner. */
   kaspiRating: float("kaspiRating"),
+  /** Availability is an order status; warehouse quantities are not recorded in this catalog. */
+  availability: mysqlEnum("availability", ["made_to_order", "in_stock", "unavailable"]).notNull().default("made_to_order"),
   isPublished: boolean("isPublished").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

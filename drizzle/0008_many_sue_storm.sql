@@ -1,0 +1,1 @@
+ALTER TABLE `products` ADD `availability` enum('made_to_order','in_stock','unavailable') DEFAULT 'made_to_order' NOT NULL;

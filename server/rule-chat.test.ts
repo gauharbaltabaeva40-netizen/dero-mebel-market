@@ -148,7 +148,7 @@ describe("autonomous sales intent routing", () => {
     expect(getGuidedPreferenceStep(extractState([{ role: "user", content: "Ас үй 180×240×55, Ақ түс, МДФ" }]))).toBe("budget");
   });
 
-  it("permits Kaspi checkout only for the exact active product", () => {
+  it("keeps every product-selection route inside DERO AI and the storefront", () => {
     const active: RecommendedProduct = {
       id: 30012,
       nameKk: "Шкаф 777",
@@ -161,8 +161,7 @@ describe("autonomous sales intent routing", () => {
       kaspiUrl: "https://kaspi.kz/shop/p/raspashnoi-shkaf-777-320x240h55-sm-belyi-113369956/",
       kaspiVerified: true,
     };
-    expect(getPaymentProductAction(30012, [active])).toBe("buy");
-    expect(active.kaspiUrl).toBe("https://kaspi.kz/shop/p/raspashnoi-shkaf-777-320x240h55-sm-belyi-113369956/");
+    expect(getPaymentProductAction(30012, [active])).toBe("select");
     expect(getPaymentProductAction(undefined, [active])).toBe("select");
     expect(getPaymentProductAction(30012, [active, { ...active, id: 30013 }])).toBe("select");
     expect(getPaymentProductAction(30012, [{ ...active, kaspiVerified: false }])).toBe("select");

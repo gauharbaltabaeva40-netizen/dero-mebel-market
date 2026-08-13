@@ -19,6 +19,7 @@ const MATERIAL_QUICK_REPLIES = {
 
 const COLOR_QUICK_REPLY_LABELS = new Set<string>(Object.values(COLOR_QUICK_REPLIES).flat());
 const MATERIAL_QUICK_REPLY_LABELS = new Set<string>(Object.values(MATERIAL_QUICK_REPLIES).flat());
+const CATEGORY_QUICK_REPLY_LABELS = new Set<string>(["Ас үй", "Шкаф", "Кухня"]);
 
 export type ChatProductLink = {
   id: number;
@@ -27,11 +28,10 @@ export type ChatProductLink = {
 };
 
 export function resolveChatProductAction(product: ChatProductLink, action: ChatProductAction) {
-  const isPurchase = action !== "select" && Boolean(product.kaspiUrl && product.kaspiVerified);
   return {
-    isPurchase,
-    href: isPurchase ? product.kaspiUrl! : `/products/${product.id}`,
-    target: isPurchase ? "_blank" : undefined,
+    isPurchase: false,
+    href: `/products/${product.id}`,
+    target: undefined,
   };
 }
 
@@ -45,4 +45,8 @@ export function isColorQuickReply(reply: string): boolean {
 
 export function isMaterialQuickReply(reply: string): boolean {
   return MATERIAL_QUICK_REPLY_LABELS.has(reply);
+}
+
+export function isCategoryQuickReply(reply: string): boolean {
+  return CATEGORY_QUICK_REPLY_LABELS.has(reply);
 }

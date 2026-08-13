@@ -8,11 +8,11 @@ describe("chat product actions", () => {
     kaspiVerified: true,
   };
 
-  it("uses the exact active Kaspi URL only for confirmed payment", () => {
+  it("keeps a former purchase action inside the product detail flow", () => {
     expect(resolveChatProductAction(active, "buy")).toEqual({
-      isPurchase: true,
-      href: active.kaspiUrl,
-      target: "_blank",
+      isPurchase: false,
+      href: "/products/30012",
+      target: undefined,
     });
   });
 

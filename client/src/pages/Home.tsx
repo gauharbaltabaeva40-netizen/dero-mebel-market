@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useLang } from "@/contexts/LanguageContext";
 import { useOpenChat } from "@/components/AiChatWidget";
 
-// Real products sold on Kaspi (deromebel_market / DERO мебель) — photos from Kaspi, buy buttons link to Kaspi product pages.
+// Real Dero Mebel product photos retained as a gallery of furniture samples; they are not purchase links.
 const galleryItems = [
   {
     url: "https://kaspi.kz/shop/p/shkaf-antresol-nyi-dero-mebel-dero-llnn-180x280h55-sm-bezhevyi-139238530",
@@ -199,13 +199,7 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-foreground/40 w-full">
             {galleryItems.map((item) => (
-              <a
-                key={item.url}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group bg-background block"
-              >
+              <article key={item.img} className="group bg-background block">
                 <div className="aspect-square overflow-hidden">
                   <img
                     src={item.img}
@@ -218,11 +212,9 @@ export default function Home() {
                   <p className="text-[11px] font-bold uppercase tracking-wide leading-tight">
                     {lang === "kk" ? item.altKk : item.altRu}
                   </p>
-                  <p className="text-[10px] uppercase tracking-widest mt-1.5" style={{ color: "var(--swiss-yellow-dark)" }}>
-                    {t.home.galleryOpen} →
-                  </p>
+                  <p className="text-[10px] uppercase tracking-widest mt-1.5" style={{ color: "var(--swiss-yellow-dark)" }}>{t.home.galleryOpen}</p>
                 </div>
-              </a>
+              </article>
             ))}
           </div>
         </div>
@@ -348,9 +340,6 @@ export default function Home() {
               <a href="https://www.instagram.com/deromebel_market/" target="_blank" rel="noreferrer" className="block hover:underline" style={{ color: "var(--swiss-yellow-dark)" }}>
                 Instagram: @deromebel_market
               </a>
-              <a href="https://kaspi.kz/shop/m/30234153" target="_blank" rel="noreferrer" className="block hover:underline" style={{ color: "var(--swiss-yellow-dark)" }}>
-                Kaspi.kz — DERO мебель
-              </a>
             </div>
           </div>
           <div className="md:col-span-7">
@@ -358,8 +347,8 @@ export default function Home() {
               <p className="swiss-label mb-6">{t.home.aiOpen}</p>
               <p className="text-muted-foreground mb-8 leading-relaxed">
                 {lang === "kk"
-                  ? "Тауарды Kaspi-дан бірден сатып алыңыз — кредит, бөліп төлеу немесе Kaspi Red. Жеке өлшемге ас үй немесе шкаф керек болса — AI консультантқа жазыңыз, шамамен бағаны есептейміз."
-                  : "Покупайте товары напрямую на Kaspi — в кредит, рассрочку или с Kaspi Red. Нужна кухня или шкаф по индивидуальным размерам — напишите AI-консультанту, рассчитаем примерную цену."}
+                  ? "Ас үй, шкаф, гардероб, кіреберіс немесе басқа жеке жиһаз жобасы керек пе? DERO AI-ға жазыңыз: өлшем, түс, материал және бюджет бойынша нұсқаларды іріктейміз."
+                  : "Нужна кухня, шкаф, гардеробная, мебель для прихожей или другой индивидуальный проект? Напишите DERO AI: подберём варианты по размеру, цвету, материалу и бюджету."}
               </p>
               <Button
                 size="lg"

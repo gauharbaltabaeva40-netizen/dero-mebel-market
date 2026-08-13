@@ -221,3 +221,18 @@
 - [x] Add regression coverage for URL routing, size filters, independent scrolling, and guided chat stages (TypeScript clean; Vitest 49/49 passing)
 - [x] Verify purchase, catalog, and guided chat journeys on desktop and 375 px mobile (verified direct checkout, stale-link fallback, independent desktop panel scrolling, and guided chat stages)
 - [x] Save checkpoint and deliver the purchase and filtering improvements
+
+## Phase 21 — DERO AI and catalog availability refresh (user request)
+
+- [x] Audit available inventory data, current guided-chat quick replies, hero copy, purchase wording, and demo product records (7 known mock records: IDs 8–14; no verified physical stock-count field, so availability will be shown as an explicit order status rather than an invented quantity)
+- [x] Rename the assistant to DERO AI and provide a full-screen responsive consultation view
+- [x] Replace the navigation contact target with a DERO AI full-page chat trigger and label the floating chat trigger as DERO AI
+- [x] Add category, color, and material quick replies at each applicable DERO AI step
+- [x] Add an explicit inventory status to product cards and product detail pages (honest “available to order” status; no invented stock counts)
+- [x] Add a KK/RU “available only” catalog filter without fabricating inventory data
+- [x] Add a one-tap cm/mm unit toggle while retaining slider-based width, height, and depth filtering
+- [x] Remove direct Kaspi purchase controls and revise related storefront and chat wording
+- [x] Replace kitchen-only hero messaging with copy that represents the full custom-furniture range
+- [x] Remove identified demo products from public catalog and chat recommendations (7 known mock records unpublished)
+- [x] Add regression coverage and verify desktop/375 px interactions (TypeScript clean; Vitest 51/51; guided quick-reply, full-screen, and catalog interactions verified)
+- [x] Save checkpoint and deliver the DERO AI and catalog availability update

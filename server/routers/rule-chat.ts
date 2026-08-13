@@ -59,7 +59,7 @@ const QUICK = {
   wardrobe: R("Шкаф", "Шкаф"),
   catalog: R("Каталогты көрсету", "Показать каталог"),
   price: R("Бағаны есептеу", "Рассчитать цену"),
-  payment: R("Kaspi арқылы сатып алу", "Купить через Kaspi"),
+  payment: R("Тапсырыс туралы", "Об оформлении"),
   delivery: R("Жеткізу туралы", "О доставке"),
   budget: R("Бюджетті таңдау", "Выбрать бюджет"),
   color: R("Түсті таңдау", "Выбрать цвет"),
@@ -88,38 +88,38 @@ const MATERIAL_QUICK_REPLIES = {
 
 const FAQ_TEXTS: Record<string, ReturnType<typeof R>> = {
   material: R(
-    "Жиһаз МДФ/ЛДСП материалдарынан жасалады. Әр тауардың нақты материалын оның карточкасынан көре аласыз. Қалаған үлгіні таңдасаңыз, мен Kaspi-дегі сатып алу бетін ашамын.",
-    "Мебель изготавливается из МДФ/ЛДСП. Точный материал указан в карточке каждого товара. Выберите подходящую модель, и я открою страницу покупки на Kaspi.",
+    "Жиһаз МДФ/ЛДСП материалдарынан жасалады. Әр тауардың нақты материалын оның карточкасынан көре аласыз. Қалаған үлгіні таңдасаңыз, DERO AI параметрлерін нақтылауға көмектеседі.",
+    "Мебель изготавливается из МДФ/ЛДСП. Точный материал указан в карточке каждого товара. Выберите подходящую модель, а DERO AI поможет уточнить параметры.",
   ),
   delivery: R(
-    "Астана бойынша жеткізу шарттары тауарға байланысты. Kaspi-дегі таңдаған тауар бетінде жеткізу нұсқасын және соңғы құнын сатып алар алдында көресіз.",
-    "Условия доставки по Астане зависят от товара. На странице выбранного товара в Kaspi вы увидите варианты доставки и итоговую стоимость до оплаты.",
+    "Астана бойынша жеткізу шарттары тауарға және жоба параметрлеріне байланысты. Алдымен лайықты үлгіні таңдаңыз, содан кейін жеткізу мерзімін нақтылауға болады.",
+    "Условия доставки по Астане зависят от товара и параметров проекта. Сначала выберите подходящую модель, затем можно уточнить сроки доставки.",
   ),
   install: R(
-    "Дайын Kaspi тауарларының жинау және орнату шарттарын тауар бетінен қараңыз. Жеке өлшеммен жасалатын жиһаз үшін бот алдымен шамамен бағаны есептейді.",
-    "Условия сборки и установки готовых товаров смотрите на странице товара в Kaspi. Для мебели по индивидуальным размерам бот сначала рассчитает ориентировочную стоимость.",
+    "Жинау және орнату шарттары тауар мен жобаға байланысты. Жеке өлшеммен жасалатын жиһаз үшін DERO AI алдымен шамамен бағаны есептейді.",
+    "Условия сборки и установки зависят от товара и проекта. Для мебели по индивидуальным размерам DERO AI сначала рассчитает ориентировочную стоимость.",
   ),
   warranty: R(
-    "Кепілдік шарттары нақты тауардың Kaspi карточкасында көрсетіледі. Үлгіні таңдаңыз — мен сізді сол беттің өзіне бағыттаймын.",
-    "Условия гарантии указаны в карточке конкретного товара на Kaspi. Выберите модель — я направлю вас прямо на эту страницу.",
+    "Кепілдік шарттары нақты тауар мен жобаға байланысты. Үлгіні таңдаңыз — DERO AI оның параметрлерін түсіндіруге көмектеседі.",
+    "Условия гарантии зависят от конкретного товара и проекта. Выберите модель — DERO AI поможет разобраться в её параметрах.",
   ),
   payment: R(
-    "Төлем Kaspi-де қауіпсіз жасалады. Алдымен үлгіні таңдаңыз, содан кейін «Kaspi арқылы сатып алу» батырмасын басыңыз — бот сізді сол тауардың төлем бетіне апарады.",
-    "Оплата безопасно выполняется на Kaspi. Сначала выберите модель, затем нажмите «Купить через Kaspi» — бот переведёт вас на страницу оплаты именно этого товара.",
+    "Тапсырыс шарттарын нақтылау үшін алдымен үлгіні таңдаңыз. DERO AI өлшем, түс, материал және бюджет бойынша іріктеуге көмектеседі.",
+    "Чтобы уточнить условия оформления, сначала выберите модель. DERO AI поможет подобрать её по размеру, цвету, материалу и бюджету.",
   ),
   leadtime: R(
-    "Дайын тауардың қолжетімділігі мен жеткізу мерзімі Kaspi карточкасында көрсетіледі. Қалаған үлгіні таңдаңыз, мен сатып алу бетін ашамын.",
-    "Наличие готового товара и срок доставки указаны в карточке Kaspi. Выберите нужную модель, и я открою страницу покупки.",
+    "Тауар карточкасында қолжетімділік мәртебесі көрсетіледі. Қалаған үлгіні таңдаңыз, DERO AI жеткізу мерзімі мен параметрлерін нақтылауға бағыттайды.",
+    "В карточке товара показан статус доступности. Выберите нужную модель, а DERO AI поможет уточнить срок доставки и параметры.",
   ),
   support: R(
-    "Мен сізге тауарды тауып, сипаттамасын түсіндіріп және Kaspi арқылы сатып алуға көмектесе аламын. Шағым немесе бұрынғы тапсырыс бойынша мәселе болса, Kaspi тапсырыс бетіндегі қолдау бөліміне өтіңіз.",
-    "Я могу подобрать товар, объяснить характеристики и помочь перейти к покупке через Kaspi. По жалобе или вопросу по уже оформленному заказу используйте раздел поддержки в вашем заказе Kaspi.",
+    "Мен сізге тауарды тауып, сипаттамасын және параметрлерін түсіндіруге көмектесе аламын. Бұрынғы тапсырыс бойынша мәселе болса, компанияның байланыс арналарына хабарласыңыз.",
+    "Я могу подобрать товар и объяснить его характеристики и параметры. По вопросу о ранее оформленном заказе обратитесь по каналам связи компании.",
   ),
 };
 
 const FALLBACK = R(
-  "Мен ас үй мен шкафтарды таңдауға көмектесемін. «Ас үй», «шкаф», «каталог», «бағаны есептеу» деп жазыңыз немесе төмендегі батырмалардың бірін таңдаңыз.",
-  "Я помогу подобрать кухню или шкаф. Напишите «кухня», «шкаф», «каталог», «рассчитать цену» или выберите одну из кнопок ниже.",
+  "Мен DERO AI — жиһазды таңдауға көмектесемін. «Ас үй», «шкаф», «каталог», «бағаны есептеу» деп жазыңыз немесе төмендегі батырмалардың бірін таңдаңыз.",
+  "Я DERO AI — помогу подобрать мебель. Напишите «кухня», «шкаф», «каталог», «рассчитать цену» или выберите одну из кнопок ниже.",
 );
 
 type Intent =
@@ -448,9 +448,9 @@ function productMatchScore(product: typeof products.$inferSelect, state: Collect
   return score;
 }
 
-/** Only an active, single Kaspi-linked product may expose a direct payment action. */
-export function getPaymentProductAction(productId: number | undefined, items: RecommendedProduct[]): "buy" | "select" {
-  return productId && items.length === 1 && Boolean(items[0]?.kaspiUrl && items[0]?.kaspiVerified) ? "buy" : "select";
+/** DERO AI keeps every selected model inside the storefront; external marketplace checkout is disabled. */
+export function getPaymentProductAction(_productId: number | undefined, _items: RecommendedProduct[]): "select" {
+  return "select";
 }
 
 export function matchesBudget(priceKzt: number | null, state: Pick<CollectedState, "budgetMinKzt" | "budgetMaxKzt">): boolean {
@@ -466,7 +466,7 @@ async function findProducts(
 ): Promise<RecommendedProduct[]> {
   if (productId) {
     const current = await db.select().from(products).where(and(eq(products.id, productId), eq(products.isPublished, true))).limit(1);
-    if (current[0]?.kaspiUrl) return productMeta(current);
+    if (current[0]) return productMeta(current);
   }
 
   const needsExactRanking = hasSpecificProductRequest(state);
@@ -517,22 +517,13 @@ export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", produ
   const meta: ChatMeta = {};
 
   if (intent === "support") {
-    return { text: FAQ_TEXTS.support[lang], meta: { quickReplies: quickReplies(lang, ["catalog", "payment"]) } };
+    return { text: FAQ_TEXTS.support[lang], meta: { quickReplies: quickReplies(lang, ["catalog", "color", "material"]) } };
   }
 
   if (intent === "payment") {
-    const selected = productId ? await findProducts(db, state, productId) : [];
-    if (getPaymentProductAction(productId, selected) === "buy") {
-      return {
-        text: lang === "kk"
-          ? "Таңдалған тауар үшін Kaspi-ға тікелей өтетін батырманы басыңыз. Төлем мен жеткізудің соңғы шарттарын Kaspi-де растайсыз."
-          : "Нажмите кнопку прямого перехода в Kaspi для выбранного товара. Финальные условия оплаты и доставки вы подтвердите на Kaspi.",
-        meta: { recommendedProducts: selected, productAction: "buy", quickReplies: quickReplies(lang, ["catalog"]) },
-      };
-    }
-    const choices = await findProducts(db, state);
+    const choices = await findProducts(db, state, productId);
     return {
-      text: lang === "kk" ? "Алдымен бір үлгіні таңдаңыз. Тауар бетін ашқаннан кейін мен сізді дәл сол тауардың Kaspi-дегі төлем бетіне жіберемін." : "Сначала выберите одну модель. После открытия страницы товара я направлю вас на страницу оплаты Kaspi именно этой модели.",
+      text: lang === "kk" ? "Алдымен бір үлгіні таңдаңыз. Содан кейін DERO AI арқылы оның өлшемін, түсін, материалын және тапсырыс параметрлерін нақтылай аласыз." : "Сначала выберите одну модель. Затем через DERO AI можно уточнить её размер, цвет, материал и параметры оформления.",
       meta: { recommendedProducts: choices, productAction: "select", quickReplies: quickReplies(lang, ["choose", "wardrobe", "catalog"]) },
     };
   }
@@ -540,8 +531,8 @@ export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", produ
   if (intent === "budget" && !BUDGET_SKIP_MATCHER.test(latest)) {
     return {
       text: lang === "kk"
-        ? "Бюджетіңізге сай дайын үлгілерді көрсету үшін диапазонды таңдаңыз. Кейін модельді қарап, Kaspi-дегі нақты сатып алу бетіне өтесіз."
-        : "Выберите диапазон бюджета, и я покажу готовые модели в этой сумме. Затем сможете посмотреть модель и перейти к её точной странице покупки на Kaspi.",
+        ? "Бюджетіңізге сай дайын үлгілерді көрсету үшін диапазонды таңдаңыз. Кейін модельдің карточкасын қарап, параметрлерін нақтылай аласыз."
+        : "Выберите диапазон бюджета, и я покажу готовые модели в этой сумме. Затем сможете посмотреть карточку модели и уточнить её параметры.",
       meta: { quickReplies: budgetQuickReplies(lang) },
     };
   }
@@ -593,7 +584,7 @@ export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", produ
       text: lang === "kk"
         ? "Осы бюджетке сай дайын үлгілерді көрсетіп тұрмын. Фото мен қысқаша сипаттаманы сырғытып қарап, бір үлгіні таңдаңыз."
         : "Показываю готовые модели в этом бюджете. Листайте фото и краткие описания, затем выберите одну модель.",
-      meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["color", "material", "payment", "budget", "catalog"]) },
+      meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["color", "material", "budget", "catalog"]) },
     };
   }
 
@@ -608,9 +599,9 @@ export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", produ
       const matched = await findProducts(db, state, productId);
       return {
         text: lang === "kk"
-          ? `Шкаф үшін шамамен есеп: **${calculation.total.toLocaleString("kk-KZ")} ₸** (ені ${state.sizeMeters} м, биіктігі 2.4 м). Төменде Kaspi арқылы тікелей сатып алуға болатын ұқсас дайын үлгілер бар.`
-          : `Ориентировочный расчёт шкафа: **${calculation.total.toLocaleString("ru-RU")} ₸** (ширина ${state.sizeMeters} м, высота 2.4 м). Ниже — похожие готовые модели, которые можно купить напрямую через Kaspi.`,
-        meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["payment", "catalog"]) },
+          ? `Шкаф үшін шамамен есеп: **${calculation.total.toLocaleString("kk-KZ")} ₸** (ені ${state.sizeMeters} м, биіктігі 2.4 м). Төменде ұқсас дайын үлгілер бар.`
+          : `Ориентировочный расчёт шкафа: **${calculation.total.toLocaleString("ru-RU")} ₸** (ширина ${state.sizeMeters} м, высота 2.4 м). Ниже — похожие готовые модели.`,
+        meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["catalog", "color", "material"]) },
       };
     }
     if (!state.sizeMeters) {
@@ -620,14 +611,14 @@ export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", produ
     const matched = await findProducts(db, state, productId);
     return {
       text: lang === "kk"
-        ? `Ас үй үшін шамамен есеп: **${calculation.total.toLocaleString("kk-KZ")} ₸** (ұзындығы ${state.sizeMeters} м). Төменде Kaspi арқылы тікелей сатып алуға болатын ұқсас дайын үлгілер бар.`
-        : `Ориентировочный расчёт кухни: **${calculation.total.toLocaleString("ru-RU")} ₸** (длина ${state.sizeMeters} м). Ниже — похожие готовые модели, которые можно купить напрямую через Kaspi.`,
-      meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["payment", "catalog"]) },
+        ? `Ас үй үшін шамамен есеп: **${calculation.total.toLocaleString("kk-KZ")} ₸** (ұзындығы ${state.sizeMeters} м). Төменде ұқсас дайын үлгілер бар.`
+        : `Ориентировочный расчёт кухни: **${calculation.total.toLocaleString("ru-RU")} ₸** (длина ${state.sizeMeters} м). Ниже — похожие готовые модели.`,
+      meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["catalog", "color", "material"]) },
     };
   }
 
   if (intent === "faq_material") return { text: FAQ_TEXTS.material[lang], meta: { quickReplies: quickReplies(lang, ["material", "catalog"]) } };
-  if (intent === "faq_delivery") return { text: FAQ_TEXTS.delivery[lang], meta: { quickReplies: quickReplies(lang, ["catalog", "payment"]) } };
+  if (intent === "faq_delivery") return { text: FAQ_TEXTS.delivery[lang], meta: { quickReplies: quickReplies(lang, ["catalog", "color", "material"]) } };
   if (intent === "faq_install") return { text: FAQ_TEXTS.install[lang], meta: { quickReplies: quickReplies(lang, ["catalog"]) } };
   if (intent === "faq_warranty") return { text: FAQ_TEXTS.warranty[lang], meta: { quickReplies: quickReplies(lang, ["catalog"]) } };
   if (intent === "faq_leadtime") return { text: FAQ_TEXTS.leadtime[lang], meta: { quickReplies: quickReplies(lang, ["catalog"]) } };
@@ -640,27 +631,27 @@ export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", produ
       return {
         text: lang === "kk"
           ? exactRequest
-            ? `Сұрауыңызға сай ${matched.length} нақты үлгі таптым. Алдымен бір үлгіні таңдаңыз — содан кейін дәл сол тауардың Kaspi-дегі сатып алу бетіне өтесіз.`
-            : "Мына дайын үлгілер Kaspi-де сатылымда. Алдымен бір үлгіні таңдаңыз — содан кейін дәл сол тауардың Kaspi-дегі сатып алу бетіне өтесіз."
+            ? `Сұрауыңызға сай ${matched.length} нақты үлгі таптым. Бір үлгіні таңдаңыз — оның карточкасынан толық параметрлерін қарай аласыз.`
+            : "Мына дайын үлгілерді қарап шығыңыз. Бір үлгіні таңдасаңыз, оның толық параметрлері ашылады."
           : exactRequest
-            ? `По вашему точному запросу найдено ${matched.length} подходящих варианта. Сначала выберите модель — затем перейдёте к покупке именно этого товара на Kaspi.`
-            : "Эти готовые модели доступны на Kaspi. Сначала выберите одну модель — затем перейдёте к покупке именно этого товара на Kaspi.",
-        meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["color", "material", "price", "payment", "budget", "catalog"]) },
+            ? `По вашему точному запросу найдено ${matched.length} подходящих варианта. Выберите модель — в её карточке есть полные параметры.`
+            : "Посмотрите эти готовые модели. После выбора откроется карточка с полными параметрами.",
+        meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["color", "material", "price", "budget", "catalog"]) },
       };
     }
   }
 
   if (intent === "greeting") {
     return {
-      text: lang === "kk" ? "Сәлем! Мен Dero Mebel сату ассистентімін. Ас үй немесе шкафты таңдап, нақты Kaspi тауарына дейін апарамын. Нені іздеп жүрсіз?" : "Здравствуйте! Я ассистент по продажам Dero Mebel. Помогу выбрать кухню или шкаф и доведу до конкретного товара на Kaspi. Что ищете?",
+      text: lang === "kk" ? "Сәлем! Мен DERO AI — Dero Mebel цифрлық консультанттымын. Жиһаз түрін таңдаңыз, содан кейін өлшем, түс, материал және бюджет бойынша нақтылаймыз." : "Здравствуйте! Я DERO AI — цифровой консультант Dero Mebel. Выберите тип мебели, затем уточним размер, цвет, материал и бюджет.",
       meta: { quickReplies: quickReplies(lang, ["choose", "wardrobe"]) },
     };
   }
 
   const fallback = state.category
     ? lang === "kk"
-      ? "Қалаған үлгілерді Kaspi-дегі сатып алу батырмасымен көрсетемін. Каталогты ашайын ба, әлде алдымен шамамен бағаны есептейік пе?"
-      : "Я покажу подходящие модели с кнопкой покупки на Kaspi. Открыть каталог или сначала рассчитать ориентировочную цену?"
+      ? "Параметрлеріңізге сай үлгілерді көрсетемін. Каталогты ашайын ба, әлде алдымен шамамен бағаны есептейік пе?"
+      : "Я покажу модели по вашим параметрам. Открыть каталог или сначала рассчитать ориентировочную цену?"
     : FALLBACK[lang];
   return { text: fallback, meta: { quickReplies: quickReplies(lang, state.category ? ["color", "material", "catalog", "price"] : ["choose", "wardrobe", "color", "material", "catalog"]) } };
 }

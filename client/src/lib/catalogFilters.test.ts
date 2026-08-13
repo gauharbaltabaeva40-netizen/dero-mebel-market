@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isWithinDimensionRange, isWithinPriceLimit } from "./catalogFilters";
+import { fromMillimeters, isAvailableForOrder, isWithinDimensionRange, isWithinPriceLimit, toMillimeters } from "./catalogFilters";
 
 describe("isWithinPriceLimit", () => {
   it("includes every catalog price when no maximum is selected", () => {
@@ -27,5 +27,18 @@ describe("isWithinPriceLimit", () => {
   it("does not hide products until a size range is selected and excludes unknown selected dimensions", () => {
     expect(isWithinDimensionRange(null, null)).toBe(true);
     expect(isWithinDimensionRange(null, [500, 700])).toBe(false);
+  });
+
+  it("keeps in-stock and made-to-order products in the availability-only result while excluding explicit unavailability", () => {
+    expect(isAvailableForOrder("in_stock")).toBe(true);
+    expect(isAvailableForOrder("made_to_order")).toBe(true);
+    expect(isAvailableForOrder("unavailable")).toBe(false);
+  });
+
+  it("converts slider values between millimetres and centimetres without changing the stored dimension", () => {
+    expect(fromMillimeters(2_450, "cm")).toBe(245);
+    expect(fromMillimeters(2_450, "mm")).toBe(2_450);
+    expect(toMillimeters(245, "cm")).toBe(2_450);
+    expect(toMillimeters(2_450, "mm")).toBe(2_450);
   });
 });

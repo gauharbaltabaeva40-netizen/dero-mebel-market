@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useRoute, Link } from "wouter";
-import { ArrowLeft, MessageCircle, ShoppingCart, Truck, Wrench, ShieldCheck, Clock } from "lucide-react";
+import { ArrowLeft, MessageCircle, Truck, Wrench, ShieldCheck, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { useLang, styleTag } from "@/contexts/LanguageContext";
@@ -142,6 +142,7 @@ export default function Product() {
           )}
 
           <div className="divide-y divide-foreground/30 border border-foreground">
+            <DetailRow label={t.catalog.availability} value={product.availability === "in_stock" ? t.catalog.inStock : product.availability === "unavailable" ? t.catalog.unavailable : t.catalog.madeToOrder} />
             <DetailRow label={t.product.materials} value={`${material}${facade ? ` · ${facade}` : ""}`} />
             <DetailRow label={t.product.dimensions} value={fmtDims(product.widthMm, product.heightMm, product.depthMm)} />
             <DetailRow label={t.product.colors} value={colors.join(", ") || "—"} />
@@ -181,50 +182,9 @@ export default function Product() {
           </div>
 
           <div className="mt-6 flex flex-col gap-3">
-            {directKaspiAvailable ? (
-              <a
-                href={product.kaspiUrl ?? undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-swiss-yellow hover:bg-swiss-yellow/90 text-black h-12 flex items-center justify-center gap-2 font-bold uppercase tracking-wider text-sm transition-colors active:scale-[0.97] transition-transform"
-              >
-                <ShoppingCart className="w-4 h-4" />
-                {t.catalog.buyKaspi}
-              </a>
-            ) : null}
-            {directKaspiAvailable && (
-              <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest">
-                {t.catalog.buyKaspiNote}
-              </p>
-            )}
-            {!directKaspiAvailable && (
-              <div className="border border-foreground bg-muted/40 p-4">
-                <p className="text-sm font-bold">
-                  {lang === "kk" ? "Kaspi-дегі тікелей сатып алу сілтемесі қазір қолжетімсіз." : "Прямая ссылка для покупки на Kaspi сейчас недоступна."}
-                </p>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  {lang === "kk" ? "Қате бет ашылмас үшін бұл батырма уақытша жасырылды. ЖИ-мен параметрлерді таңдап, қолжетімді үлгілерді қараңыз." : "Чтобы не открывать страницу с ошибкой, кнопка временно скрыта. Подберите параметры с AI и посмотрите доступные модели."}
-                </p>
-                <Button
-                  size="lg"
-                  onClick={() =>
-                    openChat({
-                      initialMessage:
-                        lang === "kk"
-                          ? `Мен "${name}" сияқты үлгі іздеймін. Параметрлерді таңдауға көмектесіңіз.`
-                          : `Ищу модель похожую на «${name}». Помогите подобрать параметры.`,
-                    })
-                  }
-                  className="mt-4 w-full rounded-none h-12 bg-swiss-yellow hover:bg-swiss-yellow/90 text-black font-bold uppercase tracking-wider text-sm active:scale-[0.97] transition-transform"
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  {lang === "kk" ? "ЖИ-мен үлгі таңдау" : "Подобрать с AI"}
-                </Button>
-              </div>
-            )}
             <Button
               size="lg"
-              variant="outline"
+              className="rounded-none h-12 bg-swiss-yellow hover:bg-swiss-yellow/90 text-black font-bold uppercase tracking-wider text-sm active:scale-[0.97] transition-transform"
               onClick={() =>
                 openChat({
                   initialMessage:
@@ -233,7 +193,6 @@ export default function Product() {
                       : `Я хочу узнать про "${name}". Рассчитайте примерную цену.`,
                 })
               }
-              className="rounded-none h-12 font-bold uppercase tracking-wider text-sm border-foreground hover:bg-foreground hover:text-background transition-colors"
             >
               <MessageCircle className="w-4 h-4 mr-2" />
               {t.product.orderAi}
