@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { ChevronLeft, ChevronRight, ExternalLink, MessageCircle, RotateCcw, Send, Sparkles, X } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { trpc } from "@/lib/trpc";
-import { isBudgetQuickReply, resolveChatProductAction } from "@/lib/chatProductActions";
+import { isBudgetQuickReply, isColorQuickReply, isMaterialQuickReply, resolveChatProductAction } from "@/lib/chatProductActions";
 import { remainingTypingDuration } from "@/lib/chatTyping";
 import { useLang } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -51,8 +51,8 @@ const greetings = {
 };
 
 const starterActions = {
-  kk: ["Ас үй", "Шкаф", "Бюджетті таңдау", "Каталогты көрсету"],
-  ru: ["Кухня", "Шкаф", "Выбрать бюджет", "Показать каталог"],
+  kk: ["Ас үй", "Шкаф", "Түсті таңдау", "Материалды таңдау", "Бюджетті таңдау", "Каталогты көрсету"],
+  ru: ["Кухня", "Шкаф", "Выбрать цвет", "Выбрать материал", "Выбрать бюджет", "Показать каталог"],
 };
 
 export function ChatProvider({ children }: { children: ReactNode }) {
@@ -257,7 +257,10 @@ function AiChatWidget({
 
                   {message.meta?.quickReplies && message.meta.quickReplies.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1.5 border-t border-foreground/20 pt-3">
-                      {message.meta.quickReplies.map((reply) => <button key={reply} onClick={() => sendMessage(reply)} disabled={chatMutation.isPending} data-chat-reply-type={isBudgetQuickReply(reply) ? "budget" : "general"} className="border border-foreground/50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide transition-colors hover:bg-foreground hover:text-background disabled:opacity-50">{reply}</button>)}
+                      {message.meta.quickReplies.map((reply) => {
+                        const replyType = isBudgetQuickReply(reply) ? "budget" : isColorQuickReply(reply) ? "color" : isMaterialQuickReply(reply) ? "material" : "general";
+                        return <button key={reply} onClick={() => sendMessage(reply)} disabled={chatMutation.isPending} data-chat-reply-type={replyType} className="border border-foreground/50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide transition-colors hover:bg-foreground hover:text-background disabled:opacity-50">{reply}</button>;
+                      })}
                     </div>
                   )}
                 </div>

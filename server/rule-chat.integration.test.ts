@@ -27,4 +27,23 @@ describe("ruleChat product-context payment routing", () => {
     expect(result.meta.recommendedProducts?.map((product) => product.id)).toEqual(expect.arrayContaining([30001, 90274]));
     expect(result.meta.recommendedProducts?.every((product) => /180x280/i.test(`${product.nameKk} ${product.nameRu}`) && /беж/i.test(`${product.nameKk} ${product.nameRu}`))).toBe(true);
   });
+
+  it("combines KK color and material quick replies when ranking kitchen recommendations", async () => {
+    const result = await ruleChat(
+      [
+        { role: "user", content: "Ас үй" },
+        { role: "assistant", content: "Түсті таңдаңыз" },
+        { role: "user", content: "Ақ түс" },
+        { role: "assistant", content: "Материалды таңдаңыз" },
+        { role: "user", content: "МДФ" },
+      ],
+      "kk",
+    );
+
+    const ids = result.meta.recommendedProducts?.map((product) => product.id) ?? [];
+    expect(result.meta.productAction).toBe("select");
+    expect(ids).toEqual([90180]);
+    expect(result.text).toContain("ақ");
+    expect(result.text).toContain("МДФ");
+  });
 });

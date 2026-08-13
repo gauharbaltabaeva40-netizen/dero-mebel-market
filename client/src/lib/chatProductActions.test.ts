@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isBudgetQuickReply, resolveChatProductAction } from "./chatProductActions";
+import { isBudgetQuickReply, isColorQuickReply, isMaterialQuickReply, resolveChatProductAction } from "./chatProductActions";
 
 describe("chat product actions", () => {
   const active = {
@@ -36,5 +36,12 @@ describe("chat product actions", () => {
     const ruReplies = ["до 200 000 ₸", "200 000–500 000 ₸", "500 000–1 000 000 ₸", "1 000 000 ₸+"];
     [...kkReplies, ...ruReplies].forEach((reply) => expect(isBudgetQuickReply(reply)).toBe(true));
     expect(isBudgetQuickReply("Каталогты көрсету")).toBe(false);
+  });
+
+  it("recognizes every KK/RU color and material quick-reply label used by the filter journey", () => {
+    ["Ақ түс", "Беж түс", "Сұр түс", "Қоңыр/Венге", "Барлық түстер", "Белый цвет", "Бежевый цвет", "Серый цвет", "Коричневый/Венге", "Все цвета"].forEach((reply) => expect(isColorQuickReply(reply)).toBe(true));
+    ["ЛДСП", "МДФ", "Массив ағаш", "Барлық материалдар", "Массив дерева", "Все материалы"].forEach((reply) => expect(isMaterialQuickReply(reply)).toBe(true));
+    expect(isColorQuickReply("МДФ")).toBe(false);
+    expect(isMaterialQuickReply("Каталогты көрсету")).toBe(false);
   });
 });

@@ -60,6 +60,40 @@ describe("extractState — bilingual parameter detection", () => {
     expect(hasSpecificProductRequest(state)).toBe(true);
   });
 
+  it("preserves the newest bilingual color and material choices across the discovery journey", () => {
+    const kk = extractState([
+      { role: "user", content: "Ас үй керек" },
+      { role: "assistant", content: "Түсті таңдаңыз" },
+      { role: "user", content: "Беж түс" },
+      { role: "assistant", content: "Материалды таңдаңыз" },
+      { role: "user", content: "МДФ" },
+      { role: "assistant", content: "Бюджетті таңдаңыз" },
+      { role: "user", content: "200 000–500 000 ₸" },
+    ]);
+    expect(kk.category).toBe("kitchen");
+    expect(kk.requestedColor).toBe("beige");
+    expect(kk.requestedMaterial).toBe("mdf");
+    expect(kk.budgetMinKzt).toBe(200000);
+    expect(kk.budgetMaxKzt).toBe(500000);
+    expect(hasSpecificProductRequest(kk)).toBe(true);
+
+    expect(extractState([{ role: "user", content: "Ақ түс" }]).requestedColor).toBe("white");
+    const ru = extractState([{ role: "user", content: "Белый цвет, массив дерева" }]);
+    expect(ru.requestedColor).toBe("white");
+    expect(ru.requestedMaterial).toBe("wood");
+  });
+
+  it("allows an all-colors or all-materials selection to clear an earlier chat filter", () => {
+    const state = extractState([
+      { role: "user", content: "Беж түс" },
+      { role: "user", content: "ЛДСП" },
+      { role: "user", content: "Барлық түстер" },
+      { role: "user", content: "Барлық материалдар" },
+    ]);
+    expect(state.requestedColor).toBeUndefined();
+    expect(state.requestedMaterial).toBeUndefined();
+  });
+
   it("accumulates state across multiple messages", () => {
     const msgs = [
       { role: "user" as const, content: "Мен ас үй аламын, 4 метр" },
@@ -84,6 +118,11 @@ describe("autonomous sales intent routing", () => {
   it("recognizes direct Kaspi purchase intent in both languages", () => {
     expect(detectIntent("Kaspi арқылы сатып алу")).toBe("payment");
     expect(detectIntent("Купить на Kaspi")).toBe("payment");
+  });
+
+  it("routes bilingual color and material filter entry points", () => {
+    expect(detectIntent("Түсті таңдау")).toBe("choose_color");
+    expect(detectIntent("Выбрать материал")).toBe("choose_material");
   });
 
   it("permits Kaspi checkout only for the exact active product", () => {

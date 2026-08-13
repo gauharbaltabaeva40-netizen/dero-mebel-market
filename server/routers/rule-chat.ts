@@ -39,6 +39,7 @@ export interface CollectedState {
   requestedHeightMm?: number;
   requestedDepthMm?: number;
   requestedColor?: "beige" | "white" | "black" | "brown" | "grey";
+  requestedMaterial?: "ldsp" | "mdf" | "wood";
   requestedProductType?: "mezzanine";
   deadline?: "fast" | "normal" | "far";
   slidingDoors?: boolean;
@@ -56,11 +57,23 @@ const QUICK = {
   payment: R("Kaspi арқылы сатып алу", "Купить через Kaspi"),
   delivery: R("Жеткізу туралы", "О доставке"),
   budget: R("Бюджетті таңдау", "Выбрать бюджет"),
+  color: R("Түсті таңдау", "Выбрать цвет"),
+  material: R("Материалды таңдау", "Выбрать материал"),
 };
 
 const BUDGET_QUICK_REPLIES = {
   kk: ["200 000 ₸ дейін", "200 000–500 000 ₸", "500 000–1 000 000 ₸", "1 000 000 ₸+"],
   ru: ["до 200 000 ₸", "200 000–500 000 ₸", "500 000–1 000 000 ₸", "1 000 000 ₸+"],
+} as const;
+
+const COLOR_QUICK_REPLIES = {
+  kk: ["Ақ түс", "Беж түс", "Сұр түс", "Қоңыр/Венге", "Барлық түстер"],
+  ru: ["Белый цвет", "Бежевый цвет", "Серый цвет", "Коричневый/Венге", "Все цвета"],
+} as const;
+
+const MATERIAL_QUICK_REPLIES = {
+  kk: ["ЛДСП", "МДФ", "Массив ағаш", "Барлық материалдар"],
+  ru: ["ЛДСП", "МДФ", "Массив дерева", "Все материалы"],
 } as const;
 
 const FAQ_TEXTS: Record<string, ReturnType<typeof R>> = {
@@ -113,6 +126,8 @@ type Intent =
   | "choose_kitchen"
   | "choose_wardrobe"
   | "budget"
+  | "choose_color"
+  | "choose_material"
   | "greeting";
 
 const INTENT_RULES: Array<{ intent: Intent; patterns: RegExp[] }> = [
@@ -120,6 +135,8 @@ const INTENT_RULES: Array<{ intent: Intent; patterns: RegExp[] }> = [
   { intent: "payment", patterns: [/kaspi.*(сатып|куп|төле|оплат)/i, /(сатып ал|купить|оплатить|төлеу|checkout)/i] },
   { intent: "calculate", patterns: [/есепте|рассчитай|посчитай|шамалап|примерн|ориентир/i] },
   { intent: "faq_price", patterns: [/баға|цена|стоимост|қанша тұрады|сколько стоит|сколько будет|құны|тұрады/i] },
+  { intent: "choose_color", patterns: [/түсті таңдау|түсін таңдау|выбрать цвет/i, /ақ түс|беж түс|сұр түс|қоңыр\/венге|барлық түстер/i, /белый цвет|бежевый цвет|серый цвет|коричневый\/венге|все цвета/i] },
+  { intent: "choose_material", patterns: [/материалды таңдау|выбрать материал/i, /^лдсп$/i, /^мдф$/i, /массив ағаш|массив дерева|барлық материалдар|все материалы/i] },
   { intent: "faq_material", patterns: [/материал|фасад|мдф|лдсп|дсп|ламина|древес|массив/i] },
   { intent: "faq_delivery", patterns: [/жеткізу|доставк|әкелу/i] },
   { intent: "faq_install", patterns: [/орнату|монтаж|жинау|сборк|установка/i] },
@@ -145,11 +162,20 @@ function latestUserMessage(messages: ChatMessage[]): string {
 
 const COLOR_MATCHERS = {
   beige: /беж|құм түст|песочн/i,
-  white: /бел(ый|ая)|ақ\b/i,
-  black: /черн|қара\b/i,
+  white: /бел(ый|ая)|ақ(?:\s|$)/i,
+  black: /черн|қара(?:\s|$)/i,
   brown: /коричн|қоңыр/i,
   grey: /сер(ый|ая)|сұр/i,
 } as const;
+
+const MATERIAL_MATCHERS = {
+  ldsp: /лдсп|ldsp|ldfp/i,
+  mdf: /мдф|mdf/i,
+  wood: /массив|wood|дерев/i,
+} as const;
+
+const COLOR_RESET_MATCHER = /барлық түстер|все цвета/i;
+const MATERIAL_RESET_MATCHER = /барлық материалдар|все материалы/i;
 
 function dimensionToMm(value: string): number {
   const numeric = Number.parseInt(value, 10);
@@ -163,13 +189,15 @@ export function hasSpecificProductRequest(state: CollectedState): boolean {
       state.requestedHeightMm ||
       state.requestedDepthMm ||
       state.requestedColor ||
+      state.requestedMaterial ||
       state.requestedProductType,
   );
 }
 
 /** Extracts product preferences from user messages only; it never requests or stores contact details. */
 export function extractState(messages: ChatMessage[]): CollectedState {
-  const text = messages.filter((message) => message.role === "user").map((message) => message.content).join("\n");
+  const userMessages = messages.filter((message) => message.role === "user");
+  const text = userMessages.map((message) => message.content).join("\n");
   const state: CollectedState = {};
 
   const sizeMatch = text.match(/(\d+(?:[.,]\d+)?)\s*(?:метр|м(?!\w))/i);
@@ -213,10 +241,26 @@ export function extractState(messages: ChatMessage[]): CollectedState {
     state.requestedHeightMm = dimensionToMm(dimensions[2]);
     state.requestedDepthMm = dimensionToMm(dimensions[3]);
   }
-  for (const [color, matcher] of Object.entries(COLOR_MATCHERS) as Array<[NonNullable<CollectedState["requestedColor"]>, RegExp]>) {
-    if (matcher.test(text)) {
-      state.requestedColor = color;
-      break;
+  const colorSelection = [...userMessages].reverse().find((message) => (
+    COLOR_RESET_MATCHER.test(message.content) || Object.values(COLOR_MATCHERS).some((matcher) => matcher.test(message.content))
+  ));
+  if (colorSelection && !COLOR_RESET_MATCHER.test(colorSelection.content)) {
+    for (const [color, matcher] of Object.entries(COLOR_MATCHERS) as Array<[NonNullable<CollectedState["requestedColor"]>, RegExp]>) {
+      if (matcher.test(colorSelection.content)) {
+        state.requestedColor = color;
+        break;
+      }
+    }
+  }
+  const materialSelection = [...userMessages].reverse().find((message) => (
+    MATERIAL_RESET_MATCHER.test(message.content) || Object.values(MATERIAL_MATCHERS).some((matcher) => matcher.test(message.content))
+  ));
+  if (materialSelection && !MATERIAL_RESET_MATCHER.test(materialSelection.content)) {
+    for (const [material, matcher] of Object.entries(MATERIAL_MATCHERS) as Array<[NonNullable<CollectedState["requestedMaterial"]>, RegExp]>) {
+      if (matcher.test(materialSelection.content)) {
+        state.requestedMaterial = material;
+        break;
+      }
     }
   }
   if (/антресол/i.test(text)) state.requestedProductType = "mezzanine";
@@ -242,6 +286,30 @@ function budgetQuickReplies(lang: "kk" | "ru"): string[] {
   return [...BUDGET_QUICK_REPLIES[lang]];
 }
 
+function colorQuickReplies(lang: "kk" | "ru"): string[] {
+  return [...COLOR_QUICK_REPLIES[lang]];
+}
+
+function materialQuickReplies(lang: "kk" | "ru"): string[] {
+  return [...MATERIAL_QUICK_REPLIES[lang]];
+}
+
+function activeFilterLabels(lang: "kk" | "ru", state: CollectedState): string[] {
+  const colors = {
+    kk: { beige: "беж", white: "ақ", black: "қара", brown: "қоңыр/венге", grey: "сұр" },
+    ru: { beige: "бежевый", white: "белый", black: "чёрный", brown: "коричневый/венге", grey: "серый" },
+  } as const;
+  const materials = {
+    kk: { ldsp: "ЛДСП", mdf: "МДФ", wood: "массив ағаш" },
+    ru: { ldsp: "ЛДСП", mdf: "МДФ", wood: "массив дерева" },
+  } as const;
+  const labels: Array<string | undefined> = [
+    state.requestedColor ? colors[lang][state.requestedColor] : undefined,
+    state.requestedMaterial ? materials[lang][state.requestedMaterial] : undefined,
+  ];
+  return labels.filter((value): value is string => value !== undefined);
+}
+
 function productMeta(rows: Array<typeof products.$inferSelect>): RecommendedProduct[] {
   return rows.map((product) => ({
     id: product.id,
@@ -257,8 +325,25 @@ function productMeta(rows: Array<typeof products.$inferSelect>): RecommendedProd
 }
 
 function productSearchText(product: typeof products.$inferSelect): string {
-  const features = typeof product.features === "string" ? product.features : JSON.stringify(product.features ?? "");
-  return [product.nameKk, product.nameRu, features].join(" ").toLowerCase();
+  const textValue = (value: unknown) => typeof value === "string" ? value : JSON.stringify(value ?? "");
+  return [
+    product.nameKk,
+    product.nameRu,
+    product.descriptionKk,
+    product.descriptionRu,
+    product.material,
+    product.materialKk,
+    product.materialRu,
+    product.facade,
+    product.facadeKk,
+    product.facadeRu,
+    product.colors,
+    product.colorsKk,
+    product.colorsRu,
+    product.features,
+    product.featuresKk,
+    product.featuresRu,
+  ].map(textValue).join(" ").toLowerCase();
 }
 
 function productMatchScore(product: typeof products.$inferSelect, state: CollectedState): number {
@@ -266,6 +351,7 @@ function productMatchScore(product: typeof products.$inferSelect, state: Collect
   let score = 0;
   if (state.requestedProductType === "mezzanine") score += /антресол/i.test(text) ? 60 : -80;
   if (state.requestedColor) score += COLOR_MATCHERS[state.requestedColor].test(text) ? 34 : -18;
+  if (state.requestedMaterial) score += MATERIAL_MATCHERS[state.requestedMaterial].test(text) ? 34 : -18;
 
   const dimensions: Array<[number | undefined, unknown]> = [
     [state.requestedWidthMm, product.widthMm],
@@ -377,13 +463,48 @@ export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", produ
     };
   }
 
+  const colorReset = COLOR_RESET_MATCHER.test(latest);
+  const materialReset = MATERIAL_RESET_MATCHER.test(latest);
+  if (intent === "choose_color" && !state.requestedColor && !colorReset) {
+    return {
+      text: lang === "kk"
+        ? "Алдымен қалаған түсті таңдаңыз. Мен осы түстегі тауарларды көрсетіп, кейін материал мен бюджетті де нақтылауға мүмкіндік беремін."
+        : "Сначала выберите желаемый цвет. Я покажу товары в этом цвете, а затем можно будет уточнить материал и бюджет.",
+      meta: { quickReplies: colorQuickReplies(lang) },
+    };
+  }
+
+  if (intent === "choose_material" && !state.requestedMaterial && !materialReset) {
+    return {
+      text: lang === "kk"
+        ? "Материалды таңдаңыз. Таңдауыңыз чаттағы түс пен бюджет параметрлерімен бірге сақталады."
+        : "Выберите материал. Он сохранится вместе с выбранными в чате цветом и бюджетом.",
+      meta: { quickReplies: materialQuickReplies(lang) },
+    };
+  }
+
+  if (state.requestedColor || state.requestedMaterial || colorReset || materialReset) {
+    const matched = await findProducts(db, state, productId);
+    const filters = activeFilterLabels(lang, state);
+    return {
+      text: lang === "kk"
+        ? filters.length > 0
+          ? `Таңдаған ${filters.join(" және ")} параметрлеріне сай дайын үлгілерді көрсетіп тұрмын. Фото мен қысқаша сипаттаманы қарап, бір үлгіні таңдаңыз.`
+          : "Түс немесе материал шектеуін алып тастадым. Қолжетімді дайын үлгілерді көрсетіп тұрмын."
+        : filters.length > 0
+          ? `Показываю готовые модели по выбранным параметрам: ${filters.join(" и ")}. Посмотрите фото и краткие описания, затем выберите модель.`
+          : "Ограничение по цвету или материалу снято. Показываю доступные готовые модели.",
+      meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["color", "material", "budget", "catalog"]) },
+    };
+  }
+
   if (state.budgetMinKzt || state.budgetMaxKzt) {
     const matched = await findProducts(db, state, productId);
     return {
       text: lang === "kk"
         ? "Осы бюджетке сай дайын үлгілерді көрсетіп тұрмын. Фото мен қысқаша сипаттаманы сырғытып қарап, бір үлгіні таңдаңыз."
         : "Показываю готовые модели в этом бюджете. Листайте фото и краткие описания, затем выберите одну модель.",
-      meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["payment", "budget", "catalog"]) },
+      meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["color", "material", "payment", "budget", "catalog"]) },
     };
   }
 
@@ -416,7 +537,7 @@ export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", produ
     };
   }
 
-  if (intent === "faq_material") return { text: FAQ_TEXTS.material[lang], meta: { quickReplies: quickReplies(lang, ["catalog"]) } };
+  if (intent === "faq_material") return { text: FAQ_TEXTS.material[lang], meta: { quickReplies: quickReplies(lang, ["material", "catalog"]) } };
   if (intent === "faq_delivery") return { text: FAQ_TEXTS.delivery[lang], meta: { quickReplies: quickReplies(lang, ["catalog", "payment"]) } };
   if (intent === "faq_install") return { text: FAQ_TEXTS.install[lang], meta: { quickReplies: quickReplies(lang, ["catalog"]) } };
   if (intent === "faq_warranty") return { text: FAQ_TEXTS.warranty[lang], meta: { quickReplies: quickReplies(lang, ["catalog"]) } };
@@ -435,7 +556,7 @@ export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", produ
           : exactRequest
             ? `По вашему точному запросу найдено ${matched.length} подходящих варианта. Сначала выберите модель — затем перейдёте к покупке именно этого товара на Kaspi.`
             : "Эти готовые модели доступны на Kaspi. Сначала выберите одну модель — затем перейдёте к покупке именно этого товара на Kaspi.",
-        meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["price", "payment", "budget", "catalog"]) },
+        meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["color", "material", "price", "payment", "budget", "catalog"]) },
       };
     }
   }
@@ -443,7 +564,7 @@ export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", produ
   if (intent === "greeting") {
     return {
       text: lang === "kk" ? "Сәлем! Мен Dero Mebel сату ассистентімін. Ас үй немесе шкафты таңдап, нақты Kaspi тауарына дейін апарамын. Нені іздеп жүрсіз?" : "Здравствуйте! Я ассистент по продажам Dero Mebel. Помогу выбрать кухню или шкаф и доведу до конкретного товара на Kaspi. Что ищете?",
-      meta: { quickReplies: quickReplies(lang, ["choose", "wardrobe", "budget", "catalog"]) },
+      meta: { quickReplies: quickReplies(lang, ["choose", "wardrobe", "color", "material", "budget", "catalog"]) },
     };
   }
 
@@ -452,5 +573,5 @@ export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", produ
       ? "Қалаған үлгілерді Kaspi-дегі сатып алу батырмасымен көрсетемін. Каталогты ашайын ба, әлде алдымен шамамен бағаны есептейік пе?"
       : "Я покажу подходящие модели с кнопкой покупки на Kaspi. Открыть каталог или сначала рассчитать ориентировочную цену?"
     : FALLBACK[lang];
-  return { text: fallback, meta: { quickReplies: quickReplies(lang, state.category ? ["catalog", "price"] : ["choose", "wardrobe", "catalog"]) } };
+  return { text: fallback, meta: { quickReplies: quickReplies(lang, state.category ? ["color", "material", "catalog", "price"] : ["choose", "wardrobe", "color", "material", "catalog"]) } };
 }

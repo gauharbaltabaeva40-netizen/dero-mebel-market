@@ -197,3 +197,15 @@
 - [x] Superseded duplicate test item; consolidated into Phase 17 above
 - [x] Superseded duplicate verification item; consolidated into Phase 17 above
 - [x] Superseded duplicate release item; consolidated into the combined Phase 17–18 release
+
+## Phase 19 — Color and material chat filters (user request)
+
+- [x] Audit published catalog materials (primarily ЛДСП, with real МДФ and metal variants)
+- [x] Audit and document actual published color keywords in product names and features with query-backed examples (бежевая/беж, белый/ақ, чёрный/қара, коричневый/қоңыр, серый/сұр)
+- [x] Document current chatbot recommendation-filtering behavior for color/material inputs before extending it (color is scored from product text; material has no extracted state or filter yet)
+- [x] Add KK/RU color quick replies that refine chatbot product recommendations
+- [x] Add KK/RU material quick replies that refine chatbot product recommendations
+- [x] Preserve selected color, material, and budget context across the chat discovery journey
+- [x] Add regression coverage for bilingual color/material matching and combined filter behavior (TypeScript clean; Vitest 44/44 passing)
+- [x] Verify filtered product previews and quick replies on desktop and 375 px mobile (color → material → budget journeys returned real preview images and selectable products on both viewports)
+- [x] Save checkpoint and deliver the enhanced chatbot filters
