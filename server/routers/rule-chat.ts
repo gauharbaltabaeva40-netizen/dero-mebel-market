@@ -15,6 +15,7 @@ export type RecommendedProduct = {
   basePriceKzt: number | null;
   priceUnit: string | null;
   kaspiUrl: string | null;
+  kaspiVerified: boolean;
 };
 
 export interface ChatMeta {
@@ -41,6 +42,10 @@ export interface CollectedState {
   requestedColor?: "beige" | "white" | "black" | "brown" | "grey";
   requestedMaterial?: "ldsp" | "mdf" | "wood";
   requestedProductType?: "mezzanine";
+  sizePreferenceCaptured?: boolean;
+  colorPreferenceCaptured?: boolean;
+  materialPreferenceCaptured?: boolean;
+  budgetPreferenceCaptured?: boolean;
   deadline?: "fast" | "normal" | "far";
   slidingDoors?: boolean;
   delivery?: boolean;
@@ -62,8 +67,13 @@ const QUICK = {
 };
 
 const BUDGET_QUICK_REPLIES = {
-  kk: ["200 000 ₸ дейін", "200 000–500 000 ₸", "500 000–1 000 000 ₸", "1 000 000 ₸+"],
-  ru: ["до 200 000 ₸", "200 000–500 000 ₸", "500 000–1 000 000 ₸", "1 000 000 ₸+"],
+  kk: ["200 000 ₸ дейін", "200 000–500 000 ₸", "500 000–1 000 000 ₸", "1 000 000 ₸+", "Бюджет маңызды емес"],
+  ru: ["до 200 000 ₸", "200 000–500 000 ₸", "500 000–1 000 000 ₸", "Бюджет не важен"],
+} as const;
+
+const SIZE_QUICK_REPLIES = {
+  kk: ["Өлшем маңызды емес"],
+  ru: ["Размер не важен"],
 } as const;
 
 const COLOR_QUICK_REPLIES = {
@@ -176,6 +186,8 @@ const MATERIAL_MATCHERS = {
 
 const COLOR_RESET_MATCHER = /барлық түстер|все цвета/i;
 const MATERIAL_RESET_MATCHER = /барлық материалдар|все материалы/i;
+const SIZE_SKIP_MATCHER = /өлшем маңызды емес|размер не важен|кез келген өлшем|любой размер/i;
+const BUDGET_SKIP_MATCHER = /бюджет маңызды емес|бюджет не важен/i;
 
 function dimensionToMm(value: string): number {
   const numeric = Number.parseInt(value, 10);
@@ -241,6 +253,18 @@ export function extractState(messages: ChatMessage[]): CollectedState {
     state.requestedHeightMm = dimensionToMm(dimensions[2]);
     state.requestedDepthMm = dimensionToMm(dimensions[3]);
   }
+  const sizeSelection = [...userMessages].reverse().find((message) => (
+    SIZE_SKIP_MATCHER.test(message.content) || /(\d{2,4})\s*[xх×]\s*(\d{2,4})\s*[xх×]\s*(\d{2,4})/i.test(message.content) || /(\d+(?:[.,]\d+)?)\s*(?:метр|м(?!\w))/i.test(message.content)
+  ));
+  if (sizeSelection) {
+    state.sizePreferenceCaptured = true;
+    if (SIZE_SKIP_MATCHER.test(sizeSelection.content)) {
+      state.sizeMeters = undefined;
+      state.requestedWidthMm = undefined;
+      state.requestedHeightMm = undefined;
+      state.requestedDepthMm = undefined;
+    }
+  }
   const colorSelection = [...userMessages].reverse().find((message) => (
     COLOR_RESET_MATCHER.test(message.content) || Object.values(COLOR_MATCHERS).some((matcher) => matcher.test(message.content))
   ));
@@ -252,6 +276,7 @@ export function extractState(messages: ChatMessage[]): CollectedState {
       }
     }
   }
+  if (colorSelection) state.colorPreferenceCaptured = true;
   const materialSelection = [...userMessages].reverse().find((message) => (
     MATERIAL_RESET_MATCHER.test(message.content) || Object.values(MATERIAL_MATCHERS).some((matcher) => matcher.test(message.content))
   ));
@@ -262,6 +287,16 @@ export function extractState(messages: ChatMessage[]): CollectedState {
         break;
       }
     }
+  }
+  if (materialSelection) state.materialPreferenceCaptured = true;
+  const budgetSkipSelection = [...userMessages].reverse().find((message) => BUDGET_SKIP_MATCHER.test(message.content));
+  if (budgetSkipSelection) {
+    state.budgetKzt = undefined;
+    state.budgetMinKzt = undefined;
+    state.budgetMaxKzt = undefined;
+    state.budgetPreferenceCaptured = true;
+  } else if (state.budgetKzt !== undefined || state.budgetMinKzt !== undefined || state.budgetMaxKzt !== undefined) {
+    state.budgetPreferenceCaptured = true;
   }
   if (/антресол/i.test(text)) state.requestedProductType = "mezzanine";
   if (/срочно|жедел|осы апта|на этой неделе/i.test(text)) state.deadline = "fast";
@@ -294,6 +329,53 @@ function materialQuickReplies(lang: "kk" | "ru"): string[] {
   return [...MATERIAL_QUICK_REPLIES[lang]];
 }
 
+function sizeQuickReplies(lang: "kk" | "ru"): string[] {
+  return [...SIZE_QUICK_REPLIES[lang]];
+}
+
+type GuidedPreferenceStep = "category" | "size" | "color" | "material" | "budget";
+
+/** Returns the next explicit filtering choice required before a product carousel is displayed. */
+export function getGuidedPreferenceStep(state: CollectedState): GuidedPreferenceStep | null {
+  if (!state.category) return "category";
+  if (!state.sizePreferenceCaptured) return "size";
+  if (!state.colorPreferenceCaptured) return "color";
+  if (!state.materialPreferenceCaptured) return "material";
+  if (!state.budgetPreferenceCaptured) return "budget";
+  return null;
+}
+
+function guidedPreferenceReply(lang: "kk" | "ru", step: GuidedPreferenceStep): ChatResult {
+  if (step === "category") {
+    return {
+      text: lang === "kk" ? "Дұрыс үлгі табу үшін алдымен жиһаз түрін таңдаңыз." : "Чтобы подобрать подходящую модель, сначала выберите тип мебели.",
+      meta: { quickReplies: quickReplies(lang, ["choose", "wardrobe"]) },
+    };
+  }
+  if (step === "size") {
+    return {
+      text: lang === "kk" ? "Ен × биіктік × тереңдік өлшемін мм-мен жазыңыз. Мысалы: **180×240×55**. Өлшем шешуші болмаса, төменнен өткізіп жіберуге болады." : "Укажите размер в мм: ширина × высота × глубина. Например: **180×240×55**. Если размер не принципиален, пропустите этот шаг кнопкой ниже.",
+      meta: { quickReplies: sizeQuickReplies(lang) },
+    };
+  }
+  if (step === "color") {
+    return {
+      text: lang === "kk" ? "Енді қалаған түсті таңдаңыз." : "Теперь выберите предпочтительный цвет.",
+      meta: { quickReplies: colorQuickReplies(lang) },
+    };
+  }
+  if (step === "material") {
+    return {
+      text: lang === "kk" ? "Материалды таңдаңыз." : "Выберите материал.",
+      meta: { quickReplies: materialQuickReplies(lang) },
+    };
+  }
+  return {
+    text: lang === "kk" ? "Соңғы қадам: бюджет диапазонын таңдаңыз немесе оны өткізіп жіберіңіз. Осыдан кейін мен тек сәйкес үлгілерді көрсетемін." : "Последний шаг: выберите диапазон бюджета или пропустите его. После этого я покажу только подходящие модели.",
+    meta: { quickReplies: budgetQuickReplies(lang) },
+  };
+}
+
 function activeFilterLabels(lang: "kk" | "ru", state: CollectedState): string[] {
   const colors = {
     kk: { beige: "беж", white: "ақ", black: "қара", brown: "қоңыр/венге", grey: "сұр" },
@@ -321,6 +403,7 @@ function productMeta(rows: Array<typeof products.$inferSelect>): RecommendedProd
     basePriceKzt: product.basePriceKzt,
     priceUnit: product.priceUnit,
     kaspiUrl: product.kaspiUrl,
+    kaspiVerified: product.kaspiVerified,
   }));
 }
 
@@ -367,7 +450,7 @@ function productMatchScore(product: typeof products.$inferSelect, state: Collect
 
 /** Only an active, single Kaspi-linked product may expose a direct payment action. */
 export function getPaymentProductAction(productId: number | undefined, items: RecommendedProduct[]): "buy" | "select" {
-  return productId && items.length === 1 && Boolean(items[0]?.kaspiUrl) ? "buy" : "select";
+  return productId && items.length === 1 && Boolean(items[0]?.kaspiUrl && items[0]?.kaspiVerified) ? "buy" : "select";
 }
 
 export function matchesBudget(priceKzt: number | null, state: Pick<CollectedState, "budgetMinKzt" | "budgetMaxKzt">): boolean {
@@ -454,7 +537,7 @@ export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", produ
     };
   }
 
-  if (intent === "budget") {
+  if (intent === "budget" && !BUDGET_SKIP_MATCHER.test(latest)) {
     return {
       text: lang === "kk"
         ? "Бюджетіңізге сай дайын үлгілерді көрсету үшін диапазонды таңдаңыз. Кейін модельді қарап, Kaspi-дегі нақты сатып алу бетіне өтесіз."
@@ -481,6 +564,12 @@ export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", produ
         : "Выберите материал. Он сохранится вместе с выбранными в чате цветом и бюджетом.",
       meta: { quickReplies: materialQuickReplies(lang) },
     };
+  }
+
+  const guidedStep = getGuidedPreferenceStep(state);
+  const informationalIntent = intent === "calculate" || intent === "faq_price" || intent === "faq_material" || intent === "faq_delivery" || intent === "faq_install" || intent === "faq_warranty" || intent === "faq_leadtime";
+  if (guidedStep && !informationalIntent) {
+    return guidedPreferenceReply(lang, guidedStep);
   }
 
   if (state.requestedColor || state.requestedMaterial || colorReset || materialReset) {
@@ -564,7 +653,7 @@ export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", produ
   if (intent === "greeting") {
     return {
       text: lang === "kk" ? "Сәлем! Мен Dero Mebel сату ассистентімін. Ас үй немесе шкафты таңдап, нақты Kaspi тауарына дейін апарамын. Нені іздеп жүрсіз?" : "Здравствуйте! Я ассистент по продажам Dero Mebel. Помогу выбрать кухню или шкаф и доведу до конкретного товара на Kaspi. Что ищете?",
-      meta: { quickReplies: quickReplies(lang, ["choose", "wardrobe", "color", "material", "budget", "catalog"]) },
+      meta: { quickReplies: quickReplies(lang, ["choose", "wardrobe"]) },
     };
   }
 

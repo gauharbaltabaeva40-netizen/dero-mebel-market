@@ -1,0 +1,1 @@
+ALTER TABLE `products` ADD `kaspiVerified` boolean DEFAULT false NOT NULL;

@@ -63,6 +63,8 @@ export const products = mysqlTable("products", {
   leadTimeDays: int("leadTimeDays"),
   /** Direct Kaspi product page URL (sold on Kaspi marketplace). */
   kaspiUrl: varchar("kaspiUrl", { length: 512 }),
+  /** Set only after the direct Kaspi product page resolves successfully. */
+  kaspiVerified: boolean("kaspiVerified").default(false).notNull(),
   /** Real review count from the Kaspi product page. */
   kaspiReviews: int("kaspiReviews"),
   /** Average rating from the Kaspi product export supplied by the store owner. */

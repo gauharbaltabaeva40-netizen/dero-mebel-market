@@ -5,6 +5,7 @@ describe("chat product actions", () => {
   const active = {
     id: 30012,
     kaspiUrl: "https://kaspi.kz/shop/p/raspashnoi-shkaf-777-320x240h55-sm-belyi-113369956/",
+    kaspiVerified: true,
   };
 
   it("uses the exact active Kaspi URL only for confirmed payment", () => {
@@ -27,6 +28,14 @@ describe("chat product actions", () => {
     expect(resolveChatProductAction({ id: 77, kaspiUrl: null }, "buy")).toEqual({
       isPurchase: false,
       href: "/products/77",
+      target: undefined,
+    });
+  });
+
+  it("keeps an unverified Kaspi URL inside the storefront instead of opening an error page", () => {
+    expect(resolveChatProductAction({ id: 90180, kaspiUrl: "https://kaspi.kz/shop/errorpage", kaspiVerified: false }, "buy")).toEqual({
+      isPurchase: false,
+      href: "/products/90180",
       target: undefined,
     });
   });

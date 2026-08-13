@@ -19,7 +19,11 @@ describe("ruleChat product-context payment routing", () => {
 
   it("puts only exact beige 180x280x55 антресоль wardrobes ahead of generic wardrobe cards", async () => {
     const result = await ruleChat(
-      [{ role: "user", content: "маған Шкаф антресольный, 180x280x55 см, бежевый керек" }],
+      [
+        { role: "user", content: "маған Шкаф антресольный, 180x280x55 см, бежевый керек" },
+        { role: "user", content: "Барлық материалдар" },
+        { role: "user", content: "Бюджет маңызды емес" },
+      ],
       "kk",
     );
 
@@ -32,10 +36,14 @@ describe("ruleChat product-context payment routing", () => {
     const result = await ruleChat(
       [
         { role: "user", content: "Ас үй" },
+        { role: "assistant", content: "Өлшемді жазыңыз" },
+        { role: "user", content: "Өлшем маңызды емес" },
         { role: "assistant", content: "Түсті таңдаңыз" },
         { role: "user", content: "Ақ түс" },
         { role: "assistant", content: "Материалды таңдаңыз" },
         { role: "user", content: "МДФ" },
+        { role: "assistant", content: "Бюджетті таңдаңыз" },
+        { role: "user", content: "Бюджет маңызды емес" },
       ],
       "kk",
     );

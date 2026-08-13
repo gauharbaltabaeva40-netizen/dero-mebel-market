@@ -60,6 +60,7 @@ export default function Product() {
     ((lang === "kk" ? product.featuresKk : product.featuresRu) as string[] | undefined | null) ??
     (product.features as string[] | undefined | null) ??
     [];
+  const directKaspiAvailable = Boolean(product.kaspiUrl && product.kaspiVerified);
 
   return (
     <div className="container py-10 md:py-14">
@@ -114,7 +115,7 @@ export default function Product() {
           </div>
 
           {/* ── KASPI REVIEWS BLOCK ─────────────────── */}
-          {product.kaspiUrl && (
+          {directKaspiAvailable && (
             <section className="mt-6 border border-foreground" aria-label={t.catalog.kaspiRating}>
               <div className="px-4 py-3 border-b border-foreground flex flex-wrap items-center gap-x-3 gap-y-1">
                 {product.kaspiRating ? <span className="text-lg font-black tracking-tight text-swiss-yellow">★★★★★</span> : null}
@@ -129,7 +130,7 @@ export default function Product() {
               <div className="px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs text-muted-foreground leading-relaxed">{product.kaspiReviews ? t.catalog.kaspiMerchantNote : t.catalog.kaspiNoReviews}</p>
                 <a
-                  href={product.kaspiUrl}
+                  href={product.kaspiUrl ?? undefined}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="shrink-0 text-xs font-bold uppercase tracking-widest text-swiss-yellow-dark hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-swiss-yellow"
@@ -180,9 +181,9 @@ export default function Product() {
           </div>
 
           <div className="mt-6 flex flex-col gap-3">
-            {product.kaspiUrl ? (
+            {directKaspiAvailable ? (
               <a
-                href={product.kaspiUrl}
+                href={product.kaspiUrl ?? undefined}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-swiss-yellow hover:bg-swiss-yellow/90 text-black h-12 flex items-center justify-center gap-2 font-bold uppercase tracking-wider text-sm transition-colors active:scale-[0.97] transition-transform"
@@ -191,27 +192,35 @@ export default function Product() {
                 {t.catalog.buyKaspi}
               </a>
             ) : null}
-            {product.kaspiUrl && (
+            {directKaspiAvailable && (
               <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest">
                 {t.catalog.buyKaspiNote}
               </p>
             )}
-            {!product.kaspiUrl && (
-              <Button
-                size="lg"
-                onClick={() =>
-                  openChat({
-                    initialMessage:
-                      lang === "kk"
-                        ? `Мен "${name}" жобасын тапсырыс бергім келеді. Бағасын есептеп беріңіз.`
-                        : `Хочу заказать проект "${name}". Рассчитайте примерную цену.`,
-                  })
-                }
-                className="rounded-none h-12 bg-swiss-yellow hover:bg-swiss-yellow/90 text-black font-bold uppercase tracking-wider text-sm active:scale-[0.97] transition-transform"
-              >
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                {lang === "kk" ? "Тапсырыс беру" : "Заказать проект"}
-              </Button>
+            {!directKaspiAvailable && (
+              <div className="border border-foreground bg-muted/40 p-4">
+                <p className="text-sm font-bold">
+                  {lang === "kk" ? "Kaspi-дегі тікелей сатып алу сілтемесі қазір қолжетімсіз." : "Прямая ссылка для покупки на Kaspi сейчас недоступна."}
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  {lang === "kk" ? "Қате бет ашылмас үшін бұл батырма уақытша жасырылды. ЖИ-мен параметрлерді таңдап, қолжетімді үлгілерді қараңыз." : "Чтобы не открывать страницу с ошибкой, кнопка временно скрыта. Подберите параметры с AI и посмотрите доступные модели."}
+                </p>
+                <Button
+                  size="lg"
+                  onClick={() =>
+                    openChat({
+                      initialMessage:
+                        lang === "kk"
+                          ? `Мен "${name}" сияқты үлгі іздеймін. Параметрлерді таңдауға көмектесіңіз.`
+                          : `Ищу модель похожую на «${name}». Помогите подобрать параметры.`,
+                    })
+                  }
+                  className="mt-4 w-full rounded-none h-12 bg-swiss-yellow hover:bg-swiss-yellow/90 text-black font-bold uppercase tracking-wider text-sm active:scale-[0.97] transition-transform"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  {lang === "kk" ? "ЖИ-мен үлгі таңдау" : "Подобрать с AI"}
+                </Button>
+              </div>
             )}
             <Button
               size="lg"

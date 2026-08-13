@@ -209,3 +209,15 @@
 - [x] Add regression coverage for bilingual color/material matching and combined filter behavior (TypeScript clean; Vitest 44/44 passing)
 - [x] Verify filtered product previews and quick replies on desktop and 375 px mobile (color → material → budget journeys returned real preview images and selectable products on both viewports)
 - [x] Save checkpoint and deliver the enhanced chatbot filters
+
+## Phase 20 — Purchase reliability and guided filtering (user request)
+
+- [x] Audit broken Kaspi product URLs and identify affected published catalog entries (12 of 377 active URLs resolve; 365 redirect to Kaspi error page)
+- [x] Repair validated Kaspi purchase URLs and show a clear in-site fallback when a destination cannot be verified (only 12 audit-verified product pages retain external checkout; 365 stale links stay in the storefront with availability guidance)
+- [x] Increase the desktop and mobile chat-widget viewport while preserving accessible controls
+- [x] Add catalog size filters for width, height, and depth with KK/RU labels
+- [x] Keep catalog filters in a separate sticky/scrollable panel while product results scroll independently
+- [x] Make the assistant collect category, size, color, material, and budget preferences before showing recommendations
+- [x] Add regression coverage for URL routing, size filters, independent scrolling, and guided chat stages (TypeScript clean; Vitest 49/49 passing)
+- [x] Verify purchase, catalog, and guided chat journeys on desktop and 375 px mobile (verified direct checkout, stale-link fallback, independent desktop panel scrolling, and guided chat stages)
+- [x] Save checkpoint and deliver the purchase and filtering improvements

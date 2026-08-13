@@ -18,6 +18,7 @@ type RecommendedProduct = {
   basePriceKzt?: number | null;
   priceUnit?: string | null;
   kaspiUrl?: string | null;
+  kaspiVerified?: boolean;
 };
 
 export type ChatRole = "user" | "assistant" | "system";
@@ -51,8 +52,8 @@ const greetings = {
 };
 
 const starterActions = {
-  kk: ["Ас үй", "Шкаф", "Түсті таңдау", "Материалды таңдау", "Бюджетті таңдау", "Каталогты көрсету"],
-  ru: ["Кухня", "Шкаф", "Выбрать цвет", "Выбрать материал", "Выбрать бюджет", "Показать каталог"],
+  kk: ["Ас үй", "Шкаф"],
+  ru: ["Кухня", "Шкаф"],
 };
 
 export function ChatProvider({ children }: { children: ReactNode }) {
@@ -225,11 +226,11 @@ function AiChatWidget({
 
   return (
     <div
-      className={`fixed bottom-5 right-5 z-50 flex flex-col items-end transition-all duration-300 ${open ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}
+      className={`fixed bottom-3 right-3 z-50 flex flex-col items-end transition-all duration-300 md:bottom-5 md:right-5 ${open ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}
       style={{ transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)" }}
     >
       {open && (
-        <section className="mb-3 flex h-[min(600px,calc(100vh-7rem))] w-[min(430px,calc(100vw-2rem))] flex-col border-2 border-foreground bg-background shadow-[6px_6px_0_0_rgba(0,0,0,0.9)]" aria-label={t.chat.title}>
+        <section className="mb-3 flex h-[min(760px,calc(100dvh-1.5rem))] w-[calc(100vw-1.5rem)] flex-col border-2 border-foreground bg-background shadow-[6px_6px_0_0_rgba(0,0,0,0.9)] sm:w-[min(560px,calc(100vw-2.5rem))] lg:w-[min(620px,calc(100vw-3rem))]" aria-label={t.chat.title}>
           <header className="flex items-center justify-between border-b-2 border-foreground bg-foreground px-4 py-3 text-background">
             <div className="flex items-center gap-3">
               <span className="inline-flex size-5 items-center justify-center" style={{ backgroundColor: "var(--swiss-yellow)" }}><Sparkles className="size-3 text-background" /></span>

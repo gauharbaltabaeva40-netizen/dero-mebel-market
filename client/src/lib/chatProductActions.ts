@@ -23,10 +23,11 @@ const MATERIAL_QUICK_REPLY_LABELS = new Set<string>(Object.values(MATERIAL_QUICK
 export type ChatProductLink = {
   id: number;
   kaspiUrl?: string | null;
+  kaspiVerified?: boolean;
 };
 
 export function resolveChatProductAction(product: ChatProductLink, action: ChatProductAction) {
-  const isPurchase = action !== "select" && Boolean(product.kaspiUrl);
+  const isPurchase = action !== "select" && Boolean(product.kaspiUrl && product.kaspiVerified);
   return {
     isPurchase,
     href: isPurchase ? product.kaspiUrl! : `/products/${product.id}`,

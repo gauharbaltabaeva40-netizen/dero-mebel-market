@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useLang, styleTag } from "@/contexts/LanguageContext";
 import { fmtPrice } from "@/lib/format";
-import { isWithinPriceLimit } from "@/lib/catalogFilters";
+import { type DimensionRange, isWithinDimensionRange, isWithinPriceLimit } from "@/lib/catalogFilters";
 import { useOpenChat } from "@/components/AiChatWidget";
 
 export default function Catalog() {
@@ -22,6 +22,9 @@ export default function Catalog() {
   const [material, setMaterial] = useState<string>("all");
   // Null means no ceiling: the first catalog view must include every published product.
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
+  const [widthRange, setWidthRange] = useState<DimensionRange>(null);
+  const [heightRange, setHeightRange] = useState<DimensionRange>(null);
+  const [depthRange, setDepthRange] = useState<DimensionRange>(null);
 
   const { data: products, isLoading } = trpc.products.list.useQuery();
 
@@ -46,14 +49,32 @@ export default function Catalog() {
       if (style !== "all" && p.style !== style) return false;
       if (material !== "all" && p.material !== material) return false;
       if (!isWithinPriceLimit(p.basePriceKzt, maxPrice)) return false;
+      if (!isWithinDimensionRange(p.widthMm, widthRange)) return false;
+      if (!isWithinDimensionRange(p.heightMm, heightRange)) return false;
+      if (!isWithinDimensionRange(p.depthMm, depthRange)) return false;
       return true;
     });
-  }, [products, category, style, material, maxPrice]);
+  }, [products, category, style, material, maxPrice, widthRange, heightRange, depthRange]);
 
   const maxCatalogPrice = useMemo(() => {
     if (!products) return 300000;
     return Math.max(...products.map((p) => p.basePriceKzt));
   }, [products]);
+
+  const dimensionMaximums = useMemo(() => {
+    const maximum = (field: "widthMm" | "heightMm" | "depthMm") => Math.max(100, ...((products ?? []).map((product) => product[field] ?? 0)));
+    return { width: maximum("widthMm"), height: maximum("heightMm"), depth: maximum("depthMm") };
+  }, [products]);
+  const dimensions = [
+    { key: "width", label: t.catalog.width, maximum: dimensionMaximums.width, range: widthRange, setRange: setWidthRange },
+    { key: "height", label: t.catalog.height, maximum: dimensionMaximums.height, range: heightRange, setRange: setHeightRange },
+    { key: "depth", label: t.catalog.depth, maximum: dimensionMaximums.depth, range: depthRange, setRange: setDepthRange },
+  ];
+  const clearDimensions = () => {
+    setWidthRange(null);
+    setHeightRange(null);
+    setDepthRange(null);
+  };
 
   return (
     <div className="container py-12 md:py-16">
@@ -61,16 +82,16 @@ export default function Catalog() {
       <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-3">{t.catalog.title}</h1>
       <p className="text-muted-foreground mb-10">{t.catalog.subtitle}</p>
 
-      <div className="grid lg:grid-cols-12 gap-10">
+      <div className="grid lg:grid-cols-12 gap-6 lg:gap-10 lg:items-start">
         {/* ── FILTER SIDEBAR ─────────────────────────── */}
-        <aside className="lg:col-span-3">
-          <div className="border border-foreground lg:sticky lg:top-24">
+        <aside className="lg:col-span-3 lg:sticky lg:top-24">
+          <div className="border border-foreground flex flex-col max-h-[min(46svh,34rem)] lg:h-[min(32rem,calc(100svh-7rem))]">
             <div className="flex items-center gap-3 px-4 py-3 border-b border-foreground">
               <Filter className="w-4 h-4" />
               <span className="font-bold text-sm uppercase tracking-widest">{t.catalog.filters}</span>
             </div>
 
-            <div className="p-4 space-y-6 max-h-72 overflow-y-auto overscroll-contain lg:max-h-none lg:overflow-visible">
+            <div className="p-4 space-y-6 overflow-y-auto overscroll-contain">
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest mb-3 text-muted-foreground">
                   {t.catalog.category}
@@ -165,12 +186,45 @@ export default function Catalog() {
                   {fmtPrice(maxPrice ?? Math.max(maxCatalogPrice, 300000))}
                 </p>
               </div>
+
+              <div>
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t.catalog.dimensions}</p>
+                  {(widthRange || heightRange || depthRange) && (
+                    <button onClick={clearDimensions} className="text-[10px] font-bold uppercase tracking-widest text-swiss-yellow-dark hover:underline">
+                      {t.catalog.clearSize}
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-5">
+                  {dimensions.map((dimension) => {
+                    const selected = Array.from(dimension.range ?? [0, dimension.maximum]);
+                    return (
+                      <div key={dimension.key}>
+                        <div className="mb-2 flex items-baseline justify-between gap-3">
+                          <span className="text-xs font-bold">{dimension.label}</span>
+                          <span className="text-[10px] font-semibold text-muted-foreground tabular-nums">{selected[0]}–{selected[1]} мм</span>
+                        </div>
+                        <Slider
+                          value={selected}
+                          min={0}
+                          max={dimension.maximum}
+                          step={10}
+                          minStepsBetweenThumbs={1}
+                          onValueChange={(value) => dimension.setRange(value[0] === 0 && value[1] === dimension.maximum ? null : [value[0], value[1]])}
+                          aria-label={dimension.label}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </aside>
 
         {/* ── PRODUCT GRID ───────────────────────────── */}
-        <div className="lg:col-span-9">
+        <div className="lg:col-span-9 lg:h-[min(32rem,calc(100svh-7rem))] lg:overflow-y-auto lg:overscroll-contain lg:pr-3">
           {isLoading ? (
             <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-px bg-foreground/40">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -206,7 +260,7 @@ export default function Catalog() {
                       <span className="absolute top-3 left-3 bg-background border border-foreground px-2 py-1 text-[10px] font-bold uppercase tracking-widest">
                         {styleTag(p.style, t)}
                       </span>
-                      {p.kaspiUrl && (
+                      {p.kaspiUrl && p.kaspiVerified && (
                         <span className="absolute top-3 right-3 bg-swiss-yellow text-black px-2 py-1 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
                           ★ {t.catalog.kaspiBadge}
                         </span>
@@ -245,7 +299,7 @@ export default function Catalog() {
                           </div>
                         ) : null}
                       </div>
-                      {p.kaspiUrl ? (
+                      {p.kaspiUrl && p.kaspiVerified ? (
                         <a
                           href={p.kaspiUrl}
                           target="_blank"
@@ -255,12 +309,19 @@ export default function Catalog() {
                           {t.catalog.buyKaspi}
                         </a>
                       ) : (
-                        <Link
-                          href={`/products/${p.id}`}
-                          className="mt-3 border border-foreground text-xs font-bold uppercase tracking-widest px-3 py-2.5 text-center hover:bg-foreground hover:text-background transition-colors active:scale-[0.97] touch-manipulation"
-                        >
-                          {lang === "kk" ? "Толығырақ" : "Подробнее"}
-                        </Link>
+                        <div className="mt-3">
+                          <Link
+                            href={`/products/${p.id}`}
+                            className="block border border-foreground text-xs font-bold uppercase tracking-widest px-3 py-2.5 text-center hover:bg-foreground hover:text-background transition-colors active:scale-[0.97] touch-manipulation"
+                          >
+                            {lang === "kk" ? "Толығырақ" : "Подробнее"}
+                          </Link>
+                          {p.kaspiUrl && (
+                            <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
+                              {lang === "kk" ? "Kaspi-дегі тікелей сілтеме қазір тексерілуде." : "Прямая ссылка Kaspi сейчас проверяется."}
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
                   </article>

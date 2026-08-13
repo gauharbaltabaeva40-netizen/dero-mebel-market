@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectIntent, extractState, getPaymentProductAction, hasSpecificProductRequest, matchesBudget, type RecommendedProduct } from "./routers/rule-chat";
+import { detectIntent, extractState, getGuidedPreferenceStep, getPaymentProductAction, hasSpecificProductRequest, matchesBudget, type RecommendedProduct } from "./routers/rule-chat";
 
 describe("extractState — bilingual parameter detection", () => {
   it("does not collect phone or name fields", () => {
@@ -94,6 +94,21 @@ describe("extractState — bilingual parameter detection", () => {
     expect(state.requestedMaterial).toBeUndefined();
   });
 
+  it("captures explicit skipped preferences so the guided journey can continue without a forced filter", () => {
+    const state = extractState([
+      { role: "user", content: "Шкаф" },
+      { role: "user", content: "Размер не важен" },
+      { role: "user", content: "Все цвета" },
+      { role: "user", content: "Все материалы" },
+      { role: "user", content: "Бюджет не важен" },
+    ]);
+    expect(state.sizePreferenceCaptured).toBe(true);
+    expect(state.colorPreferenceCaptured).toBe(true);
+    expect(state.materialPreferenceCaptured).toBe(true);
+    expect(state.budgetPreferenceCaptured).toBe(true);
+    expect(getGuidedPreferenceStep(state)).toBeNull();
+  });
+
   it("accumulates state across multiple messages", () => {
     const msgs = [
       { role: "user" as const, content: "Мен ас үй аламын, 4 метр" },
@@ -125,6 +140,14 @@ describe("autonomous sales intent routing", () => {
     expect(detectIntent("Выбрать материал")).toBe("choose_material");
   });
 
+  it("requires category, size, color, material, and budget before recommendations", () => {
+    expect(getGuidedPreferenceStep(extractState([]))).toBe("category");
+    expect(getGuidedPreferenceStep(extractState([{ role: "user", content: "Ас үй" }]))).toBe("size");
+    expect(getGuidedPreferenceStep(extractState([{ role: "user", content: "Ас үй 180×240×55" }]))).toBe("color");
+    expect(getGuidedPreferenceStep(extractState([{ role: "user", content: "Ас үй 180×240×55, Ақ түс" }]))).toBe("material");
+    expect(getGuidedPreferenceStep(extractState([{ role: "user", content: "Ас үй 180×240×55, Ақ түс, МДФ" }]))).toBe("budget");
+  });
+
   it("permits Kaspi checkout only for the exact active product", () => {
     const active: RecommendedProduct = {
       id: 30012,
@@ -136,11 +159,13 @@ describe("autonomous sales intent routing", () => {
       basePriceKzt: 199999,
       priceUnit: "fixed",
       kaspiUrl: "https://kaspi.kz/shop/p/raspashnoi-shkaf-777-320x240h55-sm-belyi-113369956/",
+      kaspiVerified: true,
     };
     expect(getPaymentProductAction(30012, [active])).toBe("buy");
     expect(active.kaspiUrl).toBe("https://kaspi.kz/shop/p/raspashnoi-shkaf-777-320x240h55-sm-belyi-113369956/");
     expect(getPaymentProductAction(undefined, [active])).toBe("select");
     expect(getPaymentProductAction(30012, [active, { ...active, id: 30013 }])).toBe("select");
+    expect(getPaymentProductAction(30012, [{ ...active, kaspiVerified: false }])).toBe("select");
   });
 
   it("keeps carousel recommendations inside the selected budget when a price is known", () => {

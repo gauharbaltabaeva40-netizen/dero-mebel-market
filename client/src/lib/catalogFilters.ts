@@ -5,3 +5,10 @@
 export function isWithinPriceLimit(basePriceKzt: number, maxPrice: number | null): boolean {
   return maxPrice === null || basePriceKzt <= maxPrice;
 }
+
+export type DimensionRange = readonly [number, number] | null;
+
+/** A selected size range excludes products without the corresponding recorded dimension. */
+export function isWithinDimensionRange(valueMm: number | null, range: DimensionRange): boolean {
+  return range === null || (valueMm !== null && valueMm >= range[0] && valueMm <= range[1]);
+}
