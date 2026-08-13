@@ -266,7 +266,14 @@
 
 ## Phase 25 — Main branch protection and GitHub Pages access (user request)
 
-- [ ] Inspect the private repository’s current branch-protection controls and GitHub Pages configuration
-- [ ] Protect `main` with pull-request review, successful Quality checks, and blocked force-push/delete operations
-- [ ] Diagnose the reported GitHub Pages URL access issue without altering the live Manus website
-- [ ] Verify the applied repository controls and reachable public site, then deliver the outcome
+- [x] Inspect the repository’s current branch-protection controls and GitHub Pages configuration (repository is public; Pages serves the root README from `main`)
+- [x] Protect `main` with pull-request review, successful Quality checks, and blocked force-push/delete operations
+- [x] Diagnose the reported GitHub Pages URL access issue without altering the live Manus website (the merged redirect now reaches the live storefront)
+- [x] Verify the applied repository controls and reachable public site, then deliver the outcome (GitHub Pages redirects to the DERO MEBEL MARKET home page)
+
+## Phase 26 — Vercel deployment correction (user-reported)
+
+- [x] Inspect why the Vercel deployment serves source-code text instead of the DERO MEBEL MARKET application (Vercel is serving the bundled Express server entry as JavaScript)
+- [x] Assess the full-stack project’s Vercel compatibility and required runtime, build, database, and environment configuration (the current long-lived Express server and Manus-managed OAuth/storage runtime do not directly map to a static Vite Vercel deployment)
+- [x] Prepare a safe deployment correction without bypassing the protected `main` branch workflow or disrupting the live Manus website (redirect configuration and regression test prepared on `fix/vercel-runtime-routing`)
+- [ ] Verify the corrected Vercel production experience and document the supported deployment route (the pull-request preview returns a verified HTTP 307 redirect; protected production merge awaits an independent approval)
