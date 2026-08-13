@@ -252,5 +252,5 @@
 ## Phase 23 — GitHub source export (user request)
 
 - [x] Inspect the current Git repository and remote configuration (main branch; connected GitHub account: gauharbaltabaeva40-netizen)
-- [ ] Create or select a private GitHub repository and push the current source code
-- [ ] Verify the GitHub repository contents and deliver its link
+- [x] Create or select a private GitHub repository and push the current source code (private repository: gauharbaltabaeva40-netizen/dero-mebel-market)
+- [x] Verify the GitHub repository contents and deliver its link (private main branch contains package.json, client application, rule-chat engine, and database schema)
