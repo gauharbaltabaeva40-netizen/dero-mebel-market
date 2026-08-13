@@ -139,4 +139,4 @@
 - [x] Open and exercise discovery, selection, and checkout chat flows on desktop and phone layouts
 - [x] Exercise discovery, product selection, and exact-Kaspi checkout as one desktop chat journey (selected /products/30003; chat offered only that model’s Kaspi URL)
 - [x] Exercise discovery, product selection, and exact-Kaspi checkout as one 375 px phone chat journey (selected /products/30003; chat offered only that model’s Kaspi URL)
-- [ ] Save checkpoint and deliver the autonomous Kaspi-sales chatbot release
+- [x] Save and publish the autonomous Kaspi-sales chatbot release (40c2b3d8)
