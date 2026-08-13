@@ -254,3 +254,12 @@
 - [x] Inspect the current Git repository and remote configuration (main branch; connected GitHub account: gauharbaltabaeva40-netizen)
 - [x] Create or select a private GitHub repository and push the current source code (private repository: gauharbaltabaeva40-netizen/dero-mebel-market)
 - [x] Verify the GitHub repository contents and deliver its link (private main branch contains package.json, client application, rule-chat engine, and database schema)
+
+## Phase 24 — Local setup documentation and GitHub CI (user request)
+
+- [x] Audit package scripts, required environment variables, and existing GitHub workflow files (pnpm scripts provide dev, build, start, check, test, and db:push; DATABASE_URL, JWT_SECRET, VITE_APP_ID, and OAUTH_SERVER_URL are required by the server environment; no GitHub workflow exists yet)
+- [x] Add a README.md with local installation, database, environment, test, and development-server instructions
+- [x] Add a concise contribution section to prepare repository collaboration
+- [x] Add GitHub Actions CI for dependency installation, TypeScript checks, and Vitest
+- [ ] Validate the new README and workflow locally, then push them to the private GitHub repository
+- [ ] Verify the GitHub Actions run and deliver the repository improvements
