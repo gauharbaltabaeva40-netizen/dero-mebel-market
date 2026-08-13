@@ -163,5 +163,5 @@
 - [x] Replace the plain header navigation with a centered translucent blur/glass capsule while preserving accessible links
 - [x] Add a compact company-name label beside the official logo without competing with the existing brand wordmark
 - [x] Verify the new header with the chatbot improvements on desktop and 375 px mobile
-- [ ] Save checkpoint and deliver the combined chatbot and navigation refinement
+- [x] Save and publish the combined chatbot and navigation refinement (114573db)
 - [x] Keep the compact company label visible and start mobile navigation scrolling at the first link
