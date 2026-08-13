@@ -177,7 +177,7 @@
 - [x] Add client-side helper-level regression coverage for carousel preview actions and budget quick-reply configuration (selection cards remain local; confirmed purchases use the exact Kaspi URL and `_blank`)
 - [x] Recognize all Russian budget quick-reply labels in the client-side quick-reply configuration and extend its test coverage
 - [x] Exercise budget quick replies and product-preview carousel actions in the 375 px mobile chat widget (three real preview photos and model-selection action confirmed)
-- [ ] Save checkpoint and deliver the enhanced chatbot and navigation release
+- [x] Save and publish the enhanced chatbot and navigation release (c0c3e565)
 
 ## Phase 18 — Motion, wider frame, and Kaspi-link repair (user request)
 
@@ -187,7 +187,7 @@
 - [x] Ensure every Kaspi purchase control opens its exact Kaspi product URL in a new tab
 - [x] Add regression coverage and verify desktop/mobile layout plus direct Kaspi-link behavior (TypeScript clean; Vitest 39/39; live chat checks confirmed exact Kaspi new-tab action)
 - [x] Add focused UI-action regression coverage for direct Kaspi new-tab links used by chat product cards
-- [ ] Save checkpoint and deliver the refined storefront release
+- [x] Save and publish the refined storefront release (c0c3e565)
 
 ## Phase 17 — Initial duplicate checklist (superseded by the scoped checklist above)
 
