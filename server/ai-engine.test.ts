@@ -101,27 +101,11 @@ describe("lead scoring", () => {
   });
 });
 
-describe("human handoff detection", () => {
-  const ruComplaints = [
-    "Мне установили кухню криво, я недоволен!",
-    "Шкаф развалился через месяц, верните деньги",
-    "Позовите живого менеджера",
-    "Я хочу переговорить с менеджером",
-  ];
-  const kkComplaints = [
-    "Шағымданғым келеді",
-    "Төлемді қайтарып беріңдер",
-    "Менеджерді шақырыңдар",
-  ];
-  /* Note: the word менеджер alone triggers handoff, so any manager request qualifies */
-
-  for (const msg of [...ruComplaints, ...kkComplaints]) {
-    it(`detects handoff in "${msg}"`, () => {
-      expect(needsHumanHandoff(msg)).toBe(true);
-    });
-  }
-
-  it("does not hand off for a normal question", () => {
+describe("autonomous public chat never hands customers off", () => {
+  it("keeps manager and complaint messages in self-service flow", () => {
+    expect(needsHumanHandoff("Менеджерді шақырыңдар")).toBe(false);
+    expect(needsHumanHandoff("Позовите живого менеджера")).toBe(false);
+    expect(needsHumanHandoff("Верните деньги, жалоба")).toBe(false);
     expect(needsHumanHandoff("Кухня неше күнде жасалады?")).toBe(false);
     expect(needsHumanHandoff("Сколько стоит шкаф 2 метра?")).toBe(false);
   });

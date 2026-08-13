@@ -278,3 +278,10 @@ REMAINING Phase 10:
 - The temporary review-sample field and the raw sample data were removed from the database model before publication. No customer-review text is retained in the storefront codebase.
 - The 375 px and desktop captures of `/products/30012` show the aggregate panel only: verified count, rating availability state, and the external Kaspi review link. They contain no individual customer-review content.
 - The cleanup migration was verified against the database (`information_schema` reports zero `kaspiReviewSamples` columns). The aggregate-only schema regression test passes; final automated status is **34/34 Vitest tests passing** with a clean TypeScript check.
+
+### Phase 13 — Autonomous Kaspi sales assistant (Aug 13, 2026)
+
+- The public KK/RU chat now remains entirely self-service: it neither collects a name or phone number nor creates a lead, notifies a manager, or routes to a human. Manager and complaint prompts receive product and Kaspi self-service guidance instead.
+- The bot guides a visitor through kitchen or wardrobe discovery, dimensions, budget, style, price estimates, materials, delivery, warranty, and payment. It presents published catalog models as **selection** cards first; these open the corresponding DERO MEBEL product page rather than checkout.
+- Once a visitor is viewing a specific Kaspi-linked product, the page supplies that `productId` to the chat. A payment request then returns exactly one product card and only its matching Kaspi URL as the direct purchase action. Without a selected product, the bot asks the visitor to choose a model.
+- Browser-driven checks completed the full live flow on desktop and at 375 px: **«Шкаф» discovery → chat selection link → `/products/30003` → payment request → the exact stored Kaspi URL for product 30003 only**. The same request sequence completed without new console errors on both viewports. TypeScript is clean and the final automated suite passes **31/31** tests, including real `ruleChat` product-context and widget-action regressions.

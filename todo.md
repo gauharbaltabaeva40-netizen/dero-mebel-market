@@ -114,7 +114,7 @@
 - [x] Remove the unapproved review-text UI, raw review samples, and supporting code/test artifacts
 - [x] Remove the temporary review-sample database column and source note after verifying the migration scope
 - [x] Re-verify aggregate-only Kaspi panels and automated checks (desktop and 375 px phone capture reviewed; TypeScript clean; Vitest 34/34 passing; removed DB column confirmed absent)
-- [ ] Save and publish the aggregate-only Kaspi cleanup release
+- [x] Save and publish the aggregate-only Kaspi cleanup release (89405f0e)
 - [x] Mobile audit: animations and styles tuned for phone viewport (catalog, product, gallery, chat)
 - [x] Reduce header logo and adjacent DERO MEBEL / MARKET wordmark scale while preserving readability
 - [x] Verify visually (desktop + mobile) and run final tests (TypeScript clean; Vitest 33/33 passing)
@@ -122,3 +122,21 @@
 - [x] Verify all Kaspi-linked catalog entries have populated KK/RU content and a product image URL (377/377 for titles, descriptions, and images; representative CDN checks returned HTTP 200)
 - [x] Verify phone layouts for the product page, works gallery, and sales-chat entry point (375 px captures reviewed: no horizontal overflow; gallery grid and gold chat trigger remain reachable)
 - [x] Ensure the catalog’s default price filter does not hide products above 500,000 ₸ (default view now shows all 384 published items)
+
+## Phase 13 — Autonomous Kaspi sales chatbot (user request)
+
+- [x] Audit manager-handoff, lead-form, and contact-capture paths in the KK/RU chatbot; all are isolated in the rule engine and widget for removal
+- [x] Add guided kitchen and wardrobe discovery flows with product-preference capture
+- [x] Add actionable product recommendations and direct Kaspi purchase paths in chat responses
+- [x] Make payment guidance route only to the matching product’s Kaspi checkout page
+- [x] Upgrade the chat widget with contextual quick replies, restart control, and accessible mobile interaction
+- [x] Wire the active product page into chat context so payment always targets that exact Kaspi item
+- [x] Require a single confirmed Kaspi product before presenting a payment action outside a product page
+- [x] Add regression coverage for product-context payment routing to the exact Kaspi URL
+- [x] Add regression tests for autonomous sales journeys and verify desktop/mobile chat flows (TypeScript clean; Vitest 28/28; desktop and 375 px storefront captures reviewed)
+- [x] Add an integration test for the real rule-chat payment path with a product context and exact Kaspi URL
+- [x] Add widget regression coverage for product-selection versus direct-Kaspi purchase actions
+- [x] Open and exercise discovery, selection, and checkout chat flows on desktop and phone layouts
+- [x] Exercise discovery, product selection, and exact-Kaspi checkout as one desktop chat journey (selected /products/30003; chat offered only that model’s Kaspi URL)
+- [x] Exercise discovery, product selection, and exact-Kaspi checkout as one 375 px phone chat journey (selected /products/30003; chat offered only that model’s Kaspi URL)
+- [ ] Save checkpoint and deliver the autonomous Kaspi-sales chatbot release

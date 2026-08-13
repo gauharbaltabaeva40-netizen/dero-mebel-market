@@ -114,9 +114,13 @@ const COMPLAINT_PATTERNS = [
   /менеджерді шақыр|менеджермен сөйлес|позовите менеджер|позови менеджер|к менеджеру|менеджер|оператор|живой|человек/i,
 ];
 
-/** True if the message indicates a complaint or explicit request for a human manager. */
-export function needsHumanHandoff(message: string): boolean {
-  return COMPLAINT_PATTERNS.some((re) => re.test(message));
+/**
+ * The public storefront bot never transfers a customer to a human. Complaints
+ * and manager requests receive self-service support guidance in rule-chat.ts.
+ */
+export function needsHumanHandoff(_message: string): boolean {
+  void COMPLAINT_PATTERNS;
+  return false;
 }
 
 /* ─────────────────────────────── tRPC ROUTER ────────────────────────────── */
@@ -285,9 +289,11 @@ export const aiRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      // USE_LLM=1 → real LLM (Gemini etc. via API). USE_LLM=0 → hand-built
-      // rule engine: zero external API calls, zero cost.
-      const useLLM = process.env.USE_LLM === "1";
+      // The storefront chatbot is intentionally autonomous and zero-cost: it
+      // uses only the deterministic Kaspi-sales rule engine. The legacy LLM
+      // branch remains out of the public chat path so it cannot collect leads
+      // or hand customers to a manager.
+      const useLLM = false;
       if (!useLLM) {
         const r = await ruleChat(input.messages, input.lang, input.productId);
         // Lead form is triggered by the client on meta.askContact; scoring and

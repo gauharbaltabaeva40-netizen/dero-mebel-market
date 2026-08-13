@@ -1,369 +1,317 @@
 import { and, eq } from "drizzle-orm";
-import { faqs, leads, pricingRules, products } from "../../drizzle/schema";
-import { createLeadRow, getDb, notifyManagerRow } from "../db";
-import { calculateKitchenPrice, calculateWardrobePrice, scoreLead } from "./ai";
-
-/* ─────────────────────────── PUBLIC CHAT CONTRACT ───────────────────────── */
+import { faqs, pricingRules, products } from "../../drizzle/schema";
+import { getDb } from "../db";
+import { calculateKitchenPrice, calculateWardrobePrice } from "./ai";
 
 export type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
 
-export interface ChatResult {
-  text: string;
-  meta: Record<string, unknown>;
+export type RecommendedProduct = {
+  id: number;
+  nameKk: string;
+  nameRu: string;
+  photoUrl: string | null;
+  basePriceKzt: number | null;
+  priceUnit: string | null;
+  kaspiUrl: string | null;
+};
+
+export interface ChatMeta {
+  recommendedProducts?: RecommendedProduct[];
+  productAction?: "buy" | "select";
+  quickReplies?: string[];
 }
 
-/* ─────────────────────────── PARAMETER EXTRACTION ──────────────────────── */
-
-/** Extracts collected conversation state from the whole message history (stateless dialog). */
-export function extractState(messages: ChatMessage[]): CollectedState {
-  const userText = messages
-    .filter((m) => m.role === "user")
-    .map((m) => m.content)
-    .join("\n");
-  const text = userText + "\n";
-  const s: CollectedState = {};
-
-  // Phone: Kazakhstan / CIS formats
-  const phoneMatch = text.match(/(?:\+?7|8)\s*\(?\d{3}\)?[\s\-]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}/);
-  if (phoneMatch) s.phone = phoneMatch[0].replace(/\s+/g, " ").trim();
-  const digitsOnly = text.replace(/\D/g, "");
-  const tenDigit = digitsOnly.match(/(?:7|8)(\d{10})/);
-  if (!s.phone && tenDigit) s.phone = "+7" + tenDigit[1];
-
-  // Name: "Менің атым X" / "Меня зовут X" / "Моё имя X"
-  const nameMatch = text.match(/(?:мен[іи]ң атым|меня зовут|мо[её] имя)\s+([A-Za-zА-Яа-яӘәІіҒғҚқҢңӨөҰұҮүҺһ]+(?:\s+[A-Za-zА-Яа-яӘәІіҒғҚқҢңӨөҰұҮүҺһ]+)?)/i);
-  if (nameMatch) s.name = nameMatch[1];
-
-  // Size meters: "3 метр", "3м", "4.5 метр"
-  const sizeMatch = text.match(/(\d+(?:[.,]\d+)?)\s*(?:метр|м(?!\w))/i);
-  if (sizeMatch) s.sizeMeters = parseFloat(sizeMatch[1].replace(",", "."));
-
-  // Budget tenge: "500 000 тг", "1 млн", "300000 ₸"
-  const budgetMatch = text.match(/(\d[\d\s]*)\s*(?:мың|тыс|млн|тг|₸|тенге|теңге)/i);
-  if (budgetMatch) {
-    let v = parseFloat(budgetMatch[1].replace(/\s/g, ""));
-    if (/тыс|мың/i.test(budgetMatch[0])) v *= 1000;
-    if (/млн/i.test(budgetMatch[0])) v *= 1_000_000;
-    s.budgetKzt = v;
-  }
-
-  // Deadline
-  if (/жақын арада|тез|асқап тұр|быстро|срочно|на этой неделе|на следующей неделе|в ближайшее время/i.test(text)) s.deadline = "fast";
-  else if (/кейін|кейінірек|месяца|месяцев|позже|потом|не срочно/i.test(text)) s.deadline = "far";
-  else if (/жыл|осы жылы|в этом году|до конца года|осы айда|в этом месяце/i.test(text)) s.deadline = "normal";
-
-  // Category interest
-  if (/ас үй|кухн/i.test(text)) s.category = "kitchen";
-  else if (/шкаф|гардероб|киім/i.test(text)) s.category = "wardrobe";
-
-  // Style
-  const styleMatch = text.match(/(классик|модерн|минимал|скандинав|лофт|неоклассик)/i);
-  if (styleMatch) s.style = styleMatch[1].toLowerCase();
-
-  // Sliding doors (wardrobes)
-  if (/раздвижн|слайдер|сдвиг/i.test(text)) s.slidingDoors = true;
-
-  // Delivery
-  if (/жеткізу|доставк/i.test(text)) s.delivery = true;
-  if (/жеткізусіз|без доставки/i.test(text)) s.delivery = false;
-
-  // LED lighting (kitchens)
-  const ledMatch = text.match(/(\d+(?:[.,]\d+)?)\s*метр?.*(?:led|лед|жарықдиод|подсветк)/i);
-  if (ledMatch) s.ledMeters = parseFloat(ledMatch[1].replace(",", "."));
-  else if (/led|лед|подсветк|жарықдиод/i.test(text)) s.ledMeters = 3;
-
-  return s;
+export interface ChatResult {
+  text: string;
+  meta: ChatMeta;
 }
 
 export interface CollectedState {
-  name?: string;
-  phone?: string;
   sizeMeters?: number;
   budgetKzt?: number;
-  deadline?: "fast" | "normal" | "far";
   category?: "kitchen" | "wardrobe";
   style?: string;
+  deadline?: "fast" | "normal" | "far";
   slidingDoors?: boolean;
   delivery?: boolean;
   ledMeters?: number;
 }
 
-/* ──────────────────────────── INTENT DETECTION ──────────────────────────── */
-
-type Intent =
-  | "faq_price_general"
-  | "faq_price_custom"
-  | "faq_material"
-  | "faq_delivery"
-  | "faq_install"
-  | "faq_warranty"
-  | "faq_payment"
-  | "faq_leadtime"
-  | "faq_contact"
-  | "search_products"
-  | "calculate"
-  | "handoff"
-  | "greeting";
-
-const INTENT_RULES: Array<{ intent: Intent; patterns: RegExp[] }> = [
-  { intent: "handoff", patterns: [/жалған/i, /обман|мошенн|мошенник/i, /шағым|шағымдан/i, /жалоба|недоволен|разочарован/i, /төлемді қайтар|верните деньги|вернуть деньги/i, /сот|прокуратур|судить/i, /менеджерді шақыр|менеджермен сөйлес|позовите менеджер|позови менеджер|к менеджеру|менеджер|оператор|живой человек|живого/i] },
-  { intent: "faq_price_custom", patterns: [/баға|цена|стоимост|қанша тұрады|сколько стоит|сколько будет|құны|тұрады/i] },
-  { intent: "faq_material", patterns: [/материал|фасад|мдф|лдам|lam|древес|массив|материалы/i] },
-  { intent: "faq_delivery", patterns: [/жеткізу|доставк|ашып әкелу/i] },
-  { intent: "faq_install", patterns: [/орнату|монтаж|жинау|сборк|установка/i] },
-  { intent: "faq_warranty", patterns: [/кепілдік|гаранти/i] },
-  { intent: "faq_payment", patterns: [/төлем|оплат|рассрочк|бөліп төлеу|наличн|қолма-қол/i] },
-  { intent: "faq_leadtime", patterns: [/қанша уақыт|сколько дней|срок изготовл|дайындалады|жасалу|мерзім/i] },
-  { intent: "faq_contact", patterns: [/байланыс|контакт|телефон|мекенжай|адрес|қайда орналасқан|где находится/i] },
-  { intent: "faq_price_general", patterns: [/қымбат ба|дешевле|арзан/i] },
-  { intent: "search_products", patterns: [/каталог|үлгі|модель|өнім|продукци/i] },
-  { intent: "calculate", patterns: [/есепте|рассчитай|посчитай|шамалап|примерн|ориентир/i] },
-  { intent: "greeting", patterns: [/сәлем|салем|привет|здравствуй|добрый|доброго/i] },
-];
-
-function detectIntent(text: string): Intent | null {
-  for (const r of INTENT_RULES) {
-    if (r.patterns.some((re) => re.test(text))) return r.intent;
-  }
-  return null;
-}
-
-function userText(messages: ChatMessage[]): string {
-  return messages.filter((m) => m.role === "user").map((m) => m.content).join("\n");
-}
-
-/* ────────────────────────── LLM-LIKE RESPONSES ──────────────────────────── */
-
 const R = (kk: string, ru: string) => ({ kk, ru });
+
+const QUICK = {
+  choose: R("Ас үй", "Кухня"),
+  wardrobe: R("Шкаф", "Шкаф"),
+  catalog: R("Каталогты көрсету", "Показать каталог"),
+  price: R("Бағаны есептеу", "Рассчитать цену"),
+  payment: R("Kaspi арқылы сатып алу", "Купить через Kaspi"),
+  delivery: R("Жеткізу туралы", "О доставке"),
+};
 
 const FAQ_TEXTS: Record<string, ReturnType<typeof R>> = {
   material: R(
-    "Біздің жиһаздарды МДФ/ЛДСМ панельдерден жасаймыз — олар ылғалға төзімді, ұзақ қызмет етеді. Фасадтар жылтыр, матовый немесе фактуралық нұсқаларда қол жетімді, түс палитрасы кең.",
-    "Мы изготавливаем мебель из влагостойких МДФ/ЛДСМ плит — они долговечны и практичны. Фасады доступны в глянцевых, матовых и фактурных вариантах, палитра цветов широкая.",
+    "Жиһаз МДФ/ЛДСП материалдарынан жасалады. Әр тауардың нақты материалын оның карточкасынан көре аласыз. Қалаған үлгіні таңдасаңыз, мен Kaspi-дегі сатып алу бетін ашамын.",
+    "Мебель изготавливается из МДФ/ЛДСП. Точный материал указан в карточке каждого товара. Выберите подходящую модель, и я открою страницу покупки на Kaspi.",
   ),
   delivery: R(
-    "Астана қаласы бойынша жеткізу қызметі бар. Жеткізу құны тапсырысқа қосылады — өлшемдеріңізді айтсаңыз, нақты соманы есептейміз.",
-    "Доставка по Астане предусмотрена. Стоимость доставки добавляется к заказу — назовите размеры, и мы рассчитаем точную сумму.",
+    "Астана бойынша жеткізу шарттары тауарға байланысты. Kaspi-дегі таңдаған тауар бетінде жеткізу нұсқасын және соңғы құнын сатып алар алдында көресіз.",
+    "Условия доставки по Астане зависят от товара. На странице выбранного товара в Kaspi вы увидите варианты доставки и итоговую стоимость до оплаты.",
   ),
   install: R(
-    "Кәсіби орнату бригадасы жиһазды үйіңізде құрастырып, реттейді. Ас үй үшін орнату ұзындық метріне, шкаф үшін бекітілген сома алынады — бәрі баға есебіне кіреді.",
-    "Профессиональная бригада соберёт и отрегулирует мебель у вас дома. Для кухни монтаж считается за погонный метр, для шкафа — фиксированная сумма; всё входит в расчёт.",
+    "Дайын Kaspi тауарларының жинау және орнату шарттарын тауар бетінен қараңыз. Жеке өлшеммен жасалатын жиһаз үшін бот алдымен шамамен бағаны есептейді.",
+    "Условия сборки и установки готовых товаров смотрите на странице товара в Kaspi. Для мебели по индивидуальным размерам бот сначала рассчитает ориентировочную стоимость.",
   ),
   warranty: R(
-    "Жасалған жұмысқа кепілдік береміз: жиһаз конструкциясына және орнату сапасына жауаптымыз. Нақты шарттарын менеджер растайды.",
-    "Даём гарантию на выполненные работы: отвечаем за конструкцию мебели и качество монтажа. Точные условия подтвердит менеджер.",
+    "Кепілдік шарттары нақты тауардың Kaspi карточкасында көрсетіледі. Үлгіні таңдаңыз — мен сізді сол беттің өзіне бағыттаймын.",
+    "Условия гарантии указаны в карточке конкретного товара на Kaspi. Выберите модель — я направлю вас прямо на эту страницу.",
   ),
   payment: R(
-    "Төлемді қолма-қол, банк аударымы немесе Kaspi арқылы жасауға болады. Біздің тауарлар Kaspi Магазин-де де сатылады (kaspi.kz/shop/m/30234153) — Kaspi Red / Kaspi Gold бонустарымен сатып алуға болады. Тапсырыс беру үшін алдын ала төлем алынады.",
-    "Оплата возможна наличными, банковским переводом или через Kaspi. Наши товары есть на Kaspi Магазин (kaspi.kz/shop/m/30234153) — можно купить с бонусами Kaspi Red / Kaspi Gold. Для заказа берётся предоплата.",
+    "Төлем Kaspi-де қауіпсіз жасалады. Алдымен үлгіні таңдаңыз, содан кейін «Kaspi арқылы сатып алу» батырмасын басыңыз — бот сізді сол тауардың төлем бетіне апарады.",
+    "Оплата безопасно выполняется на Kaspi. Сначала выберите модель, затем нажмите «Купить через Kaspi» — бот переведёт вас на страницу оплаты именно этого товара.",
   ),
   leadtime: R(
-    "Өндіріс мерзімі өнімнің күрделілігіне байланысты — шамамен бірнеше апта. Өлшемдеріңізді алған соң менеджер нақты мерзімді растайды.",
-    "Срок производства зависит от сложности изделия — ориентировочно несколько недель. После получения размеров менеджер подтвердит точный срок.",
+    "Дайын тауардың қолжетімділігі мен жеткізу мерзімі Kaspi карточкасында көрсетіледі. Қалаған үлгіні таңдаңыз, мен сатып алу бетін ашамын.",
+    "Наличие готового товара и срок доставки указаны в карточке Kaspi. Выберите нужную модель, и я открою страницу покупки.",
   ),
-  contact: R(
-    "Бізбен байланысу үшін чатта заявка қалдырыңыз — менеджер сізге өзі хабарласады. Телефон нөміріңізді жазсаңыз жеткілікті.",
-    "Оставьте заявку в чате — менеджер сам свяжется с вами. Достаточно написать номер телефона.",
+  support: R(
+    "Мен сізге тауарды тауып, сипаттамасын түсіндіріп және Kaspi арқылы сатып алуға көмектесе аламын. Шағым немесе бұрынғы тапсырыс бойынша мәселе болса, Kaspi тапсырыс бетіндегі қолдау бөліміне өтіңіз.",
+    "Я могу подобрать товар, объяснить характеристики и помочь перейти к покупке через Kaspi. По жалобе или вопросу по уже оформленному заказу используйте раздел поддержки в вашем заказе Kaspi.",
   ),
 };
 
 const FALLBACK = R(
-  "Кешіріңіз, бұл сұраққа қазір толық жауап бере алмаймын. «Баға», «материалдар», «жеткізу», «кепілдік» немесе «каталог» туралы сұраңыз, немесе заявка қалдырыңыз.",
-  "Извините, на этот вопрос я пока не могу ответить подробно. Спросите о «цене», «материалах», «доставке», «гарантии» или «каталоге», либо оставьте заявку.",
+  "Мен ас үй мен шкафтарды таңдауға көмектесемін. «Ас үй», «шкаф», «каталог», «бағаны есептеу» деп жазыңыз немесе төмендегі батырмалардың бірін таңдаңыз.",
+  "Я помогу подобрать кухню или шкаф. Напишите «кухня», «шкаф», «каталог», «рассчитать цену» или выберите одну из кнопок ниже.",
 );
 
-/* ─────────────────────────── RULE ENGINE MAIN LOOP ──────────────────────── */
+type Intent =
+  | "support"
+  | "payment"
+  | "faq_price"
+  | "faq_material"
+  | "faq_delivery"
+  | "faq_install"
+  | "faq_warranty"
+  | "faq_leadtime"
+  | "search_products"
+  | "calculate"
+  | "choose_kitchen"
+  | "choose_wardrobe"
+  | "greeting";
+
+const INTENT_RULES: Array<{ intent: Intent; patterns: RegExp[] }> = [
+  { intent: "support", patterns: [/жалған/i, /обман|мошенн|мошенник/i, /шағым|шағымдан/i, /жалоба|недоволен|разочарован/i, /төлемді қайтар|верните деньги|вернуть деньги/i, /сот|прокуратур|судить/i, /менеджер|оператор|живой человек|живого/i] },
+  { intent: "payment", patterns: [/kaspi.*(сатып|куп|төле|оплат)/i, /(сатып ал|купить|оплатить|төлеу|checkout)/i] },
+  { intent: "calculate", patterns: [/есепте|рассчитай|посчитай|шамалап|примерн|ориентир/i] },
+  { intent: "faq_price", patterns: [/баға|цена|стоимост|қанша тұрады|сколько стоит|сколько будет|құны|тұрады/i] },
+  { intent: "faq_material", patterns: [/материал|фасад|мдф|лдсп|дсп|ламина|древес|массив/i] },
+  { intent: "faq_delivery", patterns: [/жеткізу|доставк|әкелу/i] },
+  { intent: "faq_install", patterns: [/орнату|монтаж|жинау|сборк|установка/i] },
+  { intent: "faq_warranty", patterns: [/кепілдік|гаранти/i] },
+  { intent: "faq_leadtime", patterns: [/қанша уақыт|сколько дней|срок изготовл|дайындалады|жасалу|мерзім/i] },
+  { intent: "search_products", patterns: [/каталог|үлгі|модель|өнім|продукци|товар/i] },
+  { intent: "choose_kitchen", patterns: [/ас үй|кухн/i] },
+  { intent: "choose_wardrobe", patterns: [/шкаф|гардероб|киім/i] },
+  { intent: "greeting", patterns: [/сәлем|салем|привет|здравствуй|добрый|доброго/i] },
+];
+
+export function detectIntent(text: string): Intent | null {
+  for (const rule of INTENT_RULES) {
+    if (rule.patterns.some((pattern) => pattern.test(text))) return rule.intent;
+  }
+  return null;
+}
+
+function latestUserMessage(messages: ChatMessage[]): string {
+  return [...messages].reverse().find((message) => message.role === "user")?.content ?? "";
+}
+
+/** Extracts product preferences from user messages only; it never requests or stores contact details. */
+export function extractState(messages: ChatMessage[]): CollectedState {
+  const text = messages.filter((message) => message.role === "user").map((message) => message.content).join("\n");
+  const state: CollectedState = {};
+
+  const sizeMatch = text.match(/(\d+(?:[.,]\d+)?)\s*(?:метр|м(?!\w))/i);
+  if (sizeMatch) state.sizeMeters = Number.parseFloat(sizeMatch[1].replace(",", "."));
+
+  const budgetMatch = text.match(/(\d[\d\s]*)\s*(?:мың|тыс|млн|тг|₸|тенге|теңге)/i);
+  if (budgetMatch) {
+    let amount = Number.parseFloat(budgetMatch[1].replace(/\s/g, ""));
+    if (/тыс|мың/i.test(budgetMatch[0])) amount *= 1_000;
+    if (/млн/i.test(budgetMatch[0])) amount *= 1_000_000;
+    state.budgetKzt = amount;
+  }
+
+  const latest = latestUserMessage(messages);
+  if (/ас үй|кухн/i.test(latest)) state.category = "kitchen";
+  else if (/шкаф|гардероб|киім/i.test(latest)) state.category = "wardrobe";
+  else if (/ас үй|кухн/i.test(text)) state.category = "kitchen";
+  else if (/шкаф|гардероб|киім/i.test(text)) state.category = "wardrobe";
+
+  const styleMatch = text.match(/(классик|модерн|минимал|скандинав|лофт|неоклассик)/i);
+  if (styleMatch) state.style = styleMatch[1].toLowerCase();
+  if (/срочно|жедел|осы апта|на этой неделе/i.test(text)) state.deadline = "fast";
+  else if (/екі айдан|через два месяца|через 2 месяца/i.test(text)) state.deadline = "far";
+  else if (/осы жыл|в этом году/i.test(text)) state.deadline = "normal";
+  if (/раздвижн|слайдер|сдвиг/i.test(text)) state.slidingDoors = true;
+  if (/жеткізусіз|без доставки/i.test(text)) state.delivery = false;
+  else if (/жеткізу|доставк/i.test(text)) state.delivery = true;
+
+  const ledMatch = text.match(/(\d+(?:[.,]\d+)?)\s*метр?.*(?:led|лед|жарықдиод|подсветк)/i);
+  if (ledMatch) state.ledMeters = Number.parseFloat(ledMatch[1].replace(",", "."));
+  else if (/led|лед|подсветк|жарықдиод/i.test(text)) state.ledMeters = 3;
+
+  return state;
+}
+
+function quickReplies(lang: "kk" | "ru", entries: Array<keyof typeof QUICK>): string[] {
+  return entries.map((entry) => QUICK[entry][lang]);
+}
+
+function productMeta(rows: Array<typeof products.$inferSelect>): RecommendedProduct[] {
+  return rows.map((product) => ({
+    id: product.id,
+    nameKk: product.nameKk,
+    nameRu: product.nameRu,
+    photoUrl: product.photoUrl,
+    basePriceKzt: product.basePriceKzt,
+    priceUnit: product.priceUnit,
+    kaspiUrl: product.kaspiUrl,
+  }));
+}
+
+/** Only an active, single Kaspi-linked product may expose a direct payment action. */
+export function getPaymentProductAction(productId: number | undefined, items: RecommendedProduct[]): "buy" | "select" {
+  return productId && items.length === 1 && Boolean(items[0]?.kaspiUrl) ? "buy" : "select";
+}
+
+async function findProducts(
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>,
+  state: CollectedState,
+  productId?: number,
+): Promise<RecommendedProduct[]> {
+  if (productId) {
+    const current = await db.select().from(products).where(and(eq(products.id, productId), eq(products.isPublished, true))).limit(1);
+    if (current[0]?.kaspiUrl) return productMeta(current);
+  }
+
+  const rows = await db
+    .select()
+    .from(products)
+    .where(and(eq(products.isPublished, true), state.category ? eq(products.category, state.category) : undefined))
+    .limit(12);
+
+  const ranked = rows
+    .filter((product) => Boolean(product.kaspiUrl))
+    .sort((a, b) => {
+      const styleA = state.style && a.style.toLowerCase().includes(state.style) ? 1 : 0;
+      const styleB = state.style && b.style.toLowerCase().includes(state.style) ? 1 : 0;
+      if (styleA !== styleB) return styleB - styleA;
+      if (state.budgetKzt && a.basePriceKzt != null && b.basePriceKzt != null) {
+        return Math.abs(a.basePriceKzt - state.budgetKzt) - Math.abs(b.basePriceKzt - state.budgetKzt);
+      }
+      return (a.basePriceKzt ?? Number.MAX_SAFE_INTEGER) - (b.basePriceKzt ?? Number.MAX_SAFE_INTEGER);
+    })
+    .slice(0, 3);
+
+  return productMeta(ranked);
+}
+
+async function getFaqAnswer(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, lang: "kk" | "ru"): Promise<string> {
+  const rows = await db.select().from(faqs).where(eq(faqs.isActive, true)).limit(1);
+  const row = rows[0];
+  return lang === "kk" ? row?.answerKk ?? row?.answerRu ?? FALLBACK.kk : row?.answerRu ?? FALLBACK.ru;
+}
 
 export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", productId?: number): Promise<ChatResult> {
-  const text = userText(messages);
-  const state = extractState(messages);
-  const meta: Record<string, unknown> = {};
   const db = await getDb();
   if (!db) throw new Error("DB unavailable");
 
-  const rules = await db.select().from(pricingRules);
+  const latest = latestUserMessage(messages);
+  const state = extractState(messages);
+  const intent = detectIntent(latest);
+  const meta: ChatMeta = {};
 
-  // ── 1. Handoff check (highest priority) ──
-  if (detectIntent(text) === "handoff") {
-    let leadId: number | undefined;
-    if (state.phone || state.name) {
-      leadId = await createLeadFromState(db, state, productId, "Human handoff requested");
+  if (intent === "support") {
+    return { text: FAQ_TEXTS.support[lang], meta: { quickReplies: quickReplies(lang, ["catalog", "payment"]) } };
+  }
+
+  if (intent === "payment") {
+    const selected = productId ? await findProducts(db, state, productId) : [];
+    if (getPaymentProductAction(productId, selected) === "buy") {
+      return {
+        text: lang === "kk"
+          ? "Таңдалған тауар үшін Kaspi-ға тікелей өтетін батырманы басыңыз. Төлем мен жеткізудің соңғы шарттарын Kaspi-де растайсыз."
+          : "Нажмите кнопку прямого перехода в Kaspi для выбранного товара. Финальные условия оплаты и доставки вы подтвердите на Kaspi.",
+        meta: { recommendedProducts: selected, productAction: "buy", quickReplies: quickReplies(lang, ["catalog"]) },
+      };
     }
-    await notifyManagerRow({
-      leadId,
-      name: state.name,
-      phone: state.phone,
-      reason: text.slice(0, 500),
-    });
-    meta.handoff = true;
-    meta.score = state.phone ? "warm" : "cold";
-    if (leadId) meta.leadId = leadId;
+    const choices = await findProducts(db, state);
     return {
-      text: lang === "kk"
-        ? "Сіздің өтінішіңіз менеджерге берілді — ол жақын арада сізбен байланысады. Келтірген қолайсыздығыңызға кешірім сұраймын."
-        : "Я передал ваш запрос менеджеру — он свяжется с вами в ближайшее время. Приношу извинения за доставленные неудобства.",
-      meta,
+      text: lang === "kk" ? "Алдымен бір үлгіні таңдаңыз. Тауар бетін ашқаннан кейін мен сізді дәл сол тауардың Kaspi-дегі төлем бетіне жіберемін." : "Сначала выберите одну модель. После открытия страницы товара я направлю вас на страницу оплаты Kaspi именно этой модели.",
+      meta: { recommendedProducts: choices, productAction: "select", quickReplies: quickReplies(lang, ["choose", "wardrobe", "catalog"]) },
     };
   }
 
-  const intent = detectIntent(text);
-  const hasInterest = Boolean(state.sizeMeters || state.budgetKzt || state.category);
-
-  // ── 2. Auto-ask contact when enough info is collected ──
-  if (hasInterest && !state.phone && intent !== "greeting") {
-    meta.askContact = true;
-  }
-
-  // ── 3. Lead auto-creation when phone arrives with interest ──
-  if (state.phone && hasInterest) {
-    const leadId = await createLeadFromState(db, state, productId, "Auto-collected in chat");
-    meta.leadCreated = true;
-    meta.leadId = leadId;
-    const scoring = scoreLead({ sizeMeters: state.sizeMeters, budgetKzt: state.budgetKzt, phone: state.phone });
-    meta.score = scoring.score;
-    meta.scoreReason = scoring.reason;
-    // Confirm lead creation right away instead of falling through to a
-    // generic default answer.
-    if (intent !== "faq_price_custom" && intent !== "calculate") {
-      return {
-        text: lang === "kk"
-          ? "Заявкаңыз қабылданды! Мәліметтеріңізді сақтадық — менеджер жақын арада сізбен хабарласады."
-          : "Заявка принята! Мы сохранили ваши данные — менеджер свяжется с вами в ближайшее время.",
-        meta,
-      };
-    }
-  }
-
-  // ── 4. Price calculation ──
-  if (intent === "faq_price_custom" || intent === "calculate") {
-    const isWardrobeContext = state.category === "wardrobe" || /шкаф|гардероб|киім/i.test(text);
-    if (!isWardrobeContext) {
-      // kitchen
-      if (state.sizeMeters) {
-        const r = calculateKitchenPrice(rules, state.sizeMeters, {
-          delivery: state.delivery ?? true,
-          ledMeters: state.ledMeters,
-        });
-        return {
-          text: lang === "kk"
-            ? `Сіздің ас үйіңіз үшін шамамен баға: **${r.total.toLocaleString("kk-KZ")} ₸**.\n\nЕсептеу: жиһаз ${Math.round(r.breakdown.furnitureCost).toLocaleString("kk-KZ")} ₸ + орнату ${Math.round(r.breakdown.installCost).toLocaleString("kk-KZ")} ₸${r.breakdown.deliveryFee > 0 ? ` + жеткізу ${Math.round(r.breakdown.deliveryFee).toLocaleString("kk-KZ")} ₸` : ""}.\n\nТолық заявка қалдырсаңыз — менеджер нақты соманы растайды.`
-            : `Ориентировочная цена для вашей кухни: **${r.total.toLocaleString("ru-RU")} ₸**.\n\nРасчёт: мебель ${Math.round(r.breakdown.furnitureCost).toLocaleString("ru-RU")} ₸ + монтаж ${Math.round(r.breakdown.installCost).toLocaleString("ru-RU")} ₸${r.breakdown.deliveryFee > 0 ? ` + доставка ${Math.round(r.breakdown.deliveryFee).toLocaleString("ru-RU")} ₸` : ""}.\n\nОставьте заявку — менеджер подтвердит точную сумму.`,
-          meta,
-        };
+  if (intent === "calculate" || intent === "faq_price") {
+    const category = state.category ?? (productId ? undefined : "kitchen");
+    const rules = await db.select().from(pricingRules);
+    if (category === "wardrobe") {
+      if (!state.sizeMeters) {
+        return { text: lang === "kk" ? "Шкафтың шамамен бағасын есептеу үшін енін метрмен жазыңыз. Мысалы: «шкаф 2 метр»." : "Чтобы рассчитать ориентировочную цену шкафа, укажите ширину в метрах. Например: «шкаф 2 метра».", meta: { quickReplies: quickReplies(lang, ["wardrobe", "catalog"]) } };
       }
+      const calculation = calculateWardrobePrice(rules, state.sizeMeters, 2.4, { slidingDoors: state.slidingDoors ?? true, delivery: state.delivery ?? true });
+      const matched = await findProducts(db, state, productId);
       return {
         text: lang === "kk"
-          ? "Ас үйдің бағасын есептеу үшін ұзындығын (метрмен) айтсаңыз болғаны — мысалы, «3 метр ас үй». Жеткізу мен LED жарықтандыруды да қоса аламын."
-          : "Чтобы рассчитать кухню, назовите длину в метрах — например, «кухня 3 метра». Могу добавить доставку и LED-подсветку.",
-        meta,
+          ? `Шкаф үшін шамамен есеп: **${calculation.total.toLocaleString("kk-KZ")} ₸** (ені ${state.sizeMeters} м, биіктігі 2.4 м). Төменде Kaspi арқылы тікелей сатып алуға болатын ұқсас дайын үлгілер бар.`
+          : `Ориентировочный расчёт шкафа: **${calculation.total.toLocaleString("ru-RU")} ₸** (ширина ${state.sizeMeters} м, высота 2.4 м). Ниже — похожие готовые модели, которые можно купить напрямую через Kaspi.`,
+        meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["payment", "catalog"]) },
       };
     }
-    // wardrobe
-    if (state.sizeMeters) {
-      const r = calculateWardrobePrice(rules, state.sizeMeters, 2.4, {
-        slidingDoors: state.slidingDoors ?? true,
-        delivery: state.delivery ?? true,
-      });
-      return {
-        text: lang === "kk"
-          ? `Шкаф үшін шамамен баға (ені ${state.sizeMeters} м, биіктігі 2.4 м): **${r.total.toLocaleString("kk-KZ")} ₸**.\n\nЕгер биіктігіңіз басқаша болса — айтсаңыз, қайта есептеймін.`
-          : `Ориентировочная цена шкафа (ширина ${state.sizeMeters} м, высота 2.4 м): **${r.total.toLocaleString("ru-RU")} ₸**.\n\nЕсли высота другая — назовите её, пересчитаю.`,
-        meta,
-      };
+    if (!state.sizeMeters) {
+      return { text: lang === "kk" ? "Ас үйдің шамамен бағасын есептеу үшін ұзындығын метрмен жазыңыз. Мысалы: «ас үй 3 метр»." : "Чтобы рассчитать ориентировочную цену кухни, укажите длину в метрах. Например: «кухня 3 метра».", meta: { quickReplies: quickReplies(lang, ["choose", "catalog"]) } };
     }
+    const calculation = calculateKitchenPrice(rules, state.sizeMeters, { delivery: state.delivery ?? true, ledMeters: state.ledMeters });
+    const matched = await findProducts(db, state, productId);
     return {
       text: lang === "kk"
-        ? "Шкафтың бағасын есептеу үшін өлшемдерін айтсаңыз болғаны — мысалы, «ені 2 метр, биіктігі 2.4 метр». Раздвижной есіктерді де есепке аламын."
-        : "Чтобы рассчитать шкаф, назовите размеры — например, «ширина 2 метра, высота 2.4 метра». Учту и раздвижные двери.",
-      meta,
+        ? `Ас үй үшін шамамен есеп: **${calculation.total.toLocaleString("kk-KZ")} ₸** (ұзындығы ${state.sizeMeters} м). Төменде Kaspi арқылы тікелей сатып алуға болатын ұқсас дайын үлгілер бар.`
+        : `Ориентировочный расчёт кухни: **${calculation.total.toLocaleString("ru-RU")} ₸** (длина ${state.sizeMeters} м). Ниже — похожие готовые модели, которые можно купить напрямую через Kaspi.`,
+      meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["payment", "catalog"]) },
     };
   }
 
-  // ── 5. FAQ answers ──
-  if (intent && intent.startsWith("faq")) {
-    const key = intent === "faq_price_general" ? "payment" : intent.slice(4);
-    const faq = FAQ_TEXTS[key];
-    if (faq) return { text: faq[lang], meta };
-    const rows = await db.select().from(faqs).where(eq(faqs.isActive, true)).limit(3);
-    const row = rows[0];
-    if (row) {
-      const answer = lang === "kk" ? row.answerKk ?? row.answerRu : row.answerRu;
-      return { text: answer ?? FALLBACK[lang], meta };
+  if (intent === "faq_material") return { text: FAQ_TEXTS.material[lang], meta: { quickReplies: quickReplies(lang, ["catalog"]) } };
+  if (intent === "faq_delivery") return { text: FAQ_TEXTS.delivery[lang], meta: { quickReplies: quickReplies(lang, ["catalog", "payment"]) } };
+  if (intent === "faq_install") return { text: FAQ_TEXTS.install[lang], meta: { quickReplies: quickReplies(lang, ["catalog"]) } };
+  if (intent === "faq_warranty") return { text: FAQ_TEXTS.warranty[lang], meta: { quickReplies: quickReplies(lang, ["catalog"]) } };
+  if (intent === "faq_leadtime") return { text: FAQ_TEXTS.leadtime[lang], meta: { quickReplies: quickReplies(lang, ["catalog"]) } };
+
+  if (intent === "search_products" || intent === "choose_kitchen" || intent === "choose_wardrobe") {
+    const category = intent === "choose_kitchen" ? "kitchen" : intent === "choose_wardrobe" ? "wardrobe" : state.category;
+    const matched = await findProducts(db, { ...state, category }, productId);
+    if (matched.length > 0) {
+      return {
+        text: lang === "kk"
+          ? "Мына дайын үлгілер Kaspi-де сатылымда. Қалағаныңыздың «Kaspi-дан сатып алу» батырмасын басып, төлемге өте аласыз."
+          : "Эти готовые модели доступны на Kaspi. Нажмите «Купить на Kaspi» у нужного товара, чтобы перейти к оплате.",
+        meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["price", "payment", "catalog"]) },
+      };
     }
-    return { text: FALLBACK[lang], meta };
   }
 
-  // ── 6. Product search ──
-  if (intent === "search_products") {
-    const rows = await db.select().from(products).where(eq(products.isPublished, true)).limit(5);
-    if (rows.length === 0) return { text: FALLBACK[lang], meta };
-    const list = rows
-      .map((p) => `- ${lang === "kk" ? p.nameKk : p.nameRu} (${p.style}) — ${p.basePriceKzt ? p.basePriceKzt.toLocaleString("kk-KZ") : "?"} ₸${p.priceUnit || ""}`)
-      .join("\n");
-    return {
-      text: lang === "kk"
-        ? `Каталогтан таңдамалы үлгілер:\n\n${list}\n\nҚалаған өнім туралы толығырақ сұрасаңыз болады немесе сайттағы «Каталог» бөлімінен қараңыз.`
-        : `Примеры из каталога:\n\n${list}\n\nСпросите подробнее о любой модели или посмотрите раздел «Каталог» на сайте.`,
-      meta,
-    };
-  }
-
-  // ── 7. Greeting ──
   if (intent === "greeting") {
     return {
-      text: lang === "kk"
-        ? "Сәлем! Dero Mebel AI-ассистенті. Ас үй немесе шкаф жасағыңыз келе ме? Өлшемдеріңізді айтсаңыз — бағасын есептеймін."
-        : "Здравствуйте! Я AI-ассистент Dero Mebel. Хотите кухню или шкаф? Назовите размеры — рассчитаю цену.",
-      meta,
+      text: lang === "kk" ? "Сәлем! Мен Dero Mebel сату ассистентімін. Ас үй немесе шкафты таңдап, нақты Kaspi тауарына дейін апарамын. Нені іздеп жүрсіз?" : "Здравствуйте! Я ассистент по продажам Dero Mebel. Помогу выбрать кухню или шкаф и доведу до конкретного товара на Kaspi. Что ищете?",
+      meta: { quickReplies: quickReplies(lang, ["choose", "wardrobe", "catalog"]) },
     };
   }
 
-  // ── 8. Default: guided prompt based on collected state ──
-  if (state.category === "kitchen") {
-    return {
-      text: lang === "kk"
-        ? "Ас үй жасау қызықтыра ма? Ұзындығын (метрмен) және қалаған стиліңізді жазсаңыз — бағасын шығарамын."
-        : "Интересует кухня? Напишите длину в метрах и желаемый стиль — рассчитаю цену.",
-      meta,
-    };
-  }
-  if (state.category === "wardrobe") {
-    return {
-      text: lang === "kk"
-        ? "Шкаф жасау қызықтыра ма? Ені мен биіктігін (метрмен) жазсаңыз — бағасын шығарамын."
-        : "Интересует шкаф? Напишите ширину и высоту в метрах — рассчитаю цену.",
-      meta,
-    };
-  }
-  return {
-    text: lang === "kk"
-      ? "Сәлем! Мен Dero Mebel-дің AI-ассистентімін. Ас үй немесе шкаф жасаймыз. Не қызықтырады — баға, материалдар, жеткізу, кепілдік немесе каталог? Сұрағыңызды қойыңыз."
-      : "Здравствуйте! Я AI-ассистент Dero Mebel. Делаем кухни и шкафы. Что интересует — цена, материалы, доставка, гарантия или каталог? Задайте вопрос.",
-    meta,
-  };
-}
-
-/* ─────────────────────────── LEAD CREATION HELPER ───────────────────────── */
-
-async function createLeadFromState(
-  db: Awaited<ReturnType<typeof getDb>>,
-  state: CollectedState,
-  productId: number | undefined,
-  notes: string,
-): Promise<number> {
-  const scoring = scoreLead({ sizeMeters: state.sizeMeters, budgetKzt: state.budgetKzt, phone: state.phone });
-  const result = await db!.insert(leads).values({
-    name: state.name ?? null,
-    phone: state.phone ?? null,
-    product: state.category ?? "unknown",
-    sizeMeters: state.sizeMeters ?? null,
-    style: state.style ?? null,
-    budgetKzt: state.budgetKzt ?? null,
-    deadline: state.deadline ?? null,
-    notes: `${notes} (state: ${JSON.stringify({ sizeMeters: state.sizeMeters, budgetKzt: state.budgetKzt, deadline: state.deadline, category: state.category, style: state.style })})`,
-    score: scoring.score,
-    scoreReason: scoring.reason,
-  }).execute();
-  void productId;
-  return ((result as unknown[])[0] as { insertId: number }).insertId;
+  const fallback = state.category
+    ? lang === "kk"
+      ? "Қалаған үлгілерді Kaspi-дегі сатып алу батырмасымен көрсетемін. Каталогты ашайын ба, әлде алдымен шамамен бағаны есептейік пе?"
+      : "Я покажу подходящие модели с кнопкой покупки на Kaspi. Открыть каталог или сначала рассчитать ориентировочную цену?"
+    : FALLBACK[lang];
+  return { text: fallback, meta: { quickReplies: quickReplies(lang, state.category ? ["catalog", "price"] : ["choose", "wardrobe", "catalog"]) } };
 }

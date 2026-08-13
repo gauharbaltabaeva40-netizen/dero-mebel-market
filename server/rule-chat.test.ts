@@ -1,22 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { extractState } from "./routers/rule-chat";
+import { detectIntent, extractState, getPaymentProductAction, type RecommendedProduct } from "./routers/rule-chat";
 
 describe("extractState — bilingual parameter detection", () => {
-  it("detects a Kazakh phone", () => {
-    const s = extractState([{ role: "user", content: "Сәлем! Менің нөмірім +7 701 234 5678" }]);
-    expect(s.phone?.replace(/\D/g, "")).toContain("7012345678");
-  });
-
-  it("detects an 8-formatted CIS phone", () => {
-    const s = extractState([{ role: "user", content: "Позвоните мне: 8 707 111 22 33" }]);
-    expect(s.phone?.replace(/\D/g, "")).toContain("7071112233");
-  });
-
-  it("extracts name from «Меня зовут» and «Менің атым»", () => {
-    const s1 = extractState([{ role: "user", content: "Менің атым Арман" }]);
-    expect(s1.name).toBe("Арман");
-    const s2 = extractState([{ role: "user", content: "Меня зовут Айгерим" }]);
-    expect(s2.name).toBe("Айгерим");
+  it("does not collect phone or name fields", () => {
+    const s = extractState([{ role: "user", content: "Менің атым Арман, нөмірім +7 701 234 5678, шкаф 2 метр" }]);
+    expect(s).not.toHaveProperty("phone");
+    expect(s).not.toHaveProperty("name");
+    expect(s.sizeMeters).toBe(2);
   });
 
   it("extracts size in meters", () => {
@@ -54,13 +44,42 @@ describe("extractState — bilingual parameter detection", () => {
     const msgs = [
       { role: "user" as const, content: "Мен ас үй аламын, 4 метр" },
       { role: "assistant" as const, content: "Рахмет!" },
-      { role: "user" as const, content: "Бюджет 800 000 тг, +77059998877" },
+      { role: "user" as const, content: "Бюджет 800 000 тг" },
     ];
     const s = extractState(msgs);
     expect(s.category).toBe("kitchen");
     expect(s.sizeMeters).toBe(4);
     expect(s.budgetKzt).toBe(800000);
-    expect(s.phone).toContain("7059998877");
+    expect(s).not.toHaveProperty("phone");
+  });
+});
+
+describe("autonomous sales intent routing", () => {
+  it("routes manager and complaint requests to self-service support, not handoff", () => {
+    expect(detectIntent("Менеджерді шақырыңдар")).toBe("support");
+    expect(detectIntent("Хочу поговорить с менеджером")).toBe("support");
+    expect(detectIntent("Верните деньги, жалоба")).toBe("support");
+  });
+
+  it("recognizes direct Kaspi purchase intent in both languages", () => {
+    expect(detectIntent("Kaspi арқылы сатып алу")).toBe("payment");
+    expect(detectIntent("Купить на Kaspi")).toBe("payment");
+  });
+
+  it("permits Kaspi checkout only for the exact active product", () => {
+    const active: RecommendedProduct = {
+      id: 30012,
+      nameKk: "Шкаф 777",
+      nameRu: "Шкаф 777",
+      photoUrl: null,
+      basePriceKzt: 199999,
+      priceUnit: "fixed",
+      kaspiUrl: "https://kaspi.kz/shop/p/raspashnoi-shkaf-777-320x240h55-sm-belyi-113369956/",
+    };
+    expect(getPaymentProductAction(30012, [active])).toBe("buy");
+    expect(active.kaspiUrl).toBe("https://kaspi.kz/shop/p/raspashnoi-shkaf-777-320x240h55-sm-belyi-113369956/");
+    expect(getPaymentProductAction(undefined, [active])).toBe("select");
+    expect(getPaymentProductAction(30012, [active, { ...active, id: 30013 }])).toBe("select");
   });
 });
 
