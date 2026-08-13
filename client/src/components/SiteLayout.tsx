@@ -28,40 +28,25 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex flex-col bg-muted/50">
       {/* Four-sided page frame: outer padding on all sides */}
       <div className="flex-1 flex flex-col m-1 sm:m-2 md:m-4 lg:m-6">
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border border-foreground">
-        {/* Centered branding: official logo image + wordmark */}
-        <div className="container flex items-center justify-center gap-2 sm:gap-3 py-1.5 sm:py-2">
-          <img
-            src={LOGO_URL}
-            alt="Dero Mebel Market"
-            className="h-10 sm:h-12 md:h-14 w-auto object-contain"
-          />
-          <div className="flex flex-col leading-none select-none">
-            <span
-              className="text-xs sm:text-sm md:text-lg font-black tracking-[0.13em] sm:tracking-[0.16em]"
-              style={{ color: "var(--foreground)", fontFamily: "'Inter', sans-serif" }}
-            >
-              DERO MEBEL
+      <header className="sticky top-2 z-40 px-1 sm:px-2">
+        <div className="mx-auto flex w-full max-w-6xl items-center gap-2 rounded-[1.65rem] border border-foreground/20 bg-background/72 px-2 py-2 shadow-[0_12px_32px_rgba(0,0,0,0.10)] backdrop-blur-xl sm:gap-4 sm:px-4">
+          <Link href="/" className="flex shrink-0 items-center gap-1 rounded-full px-1 py-0.5 transition-opacity hover:opacity-70" aria-label="Dero Mebel Market">
+            <img src={LOGO_URL} alt="" className="size-7 sm:size-9 w-auto object-contain" />
+            <span className="flex flex-col leading-none select-none">
+              <span className="text-[6px] sm:text-[9px] font-black tracking-[0.08em] sm:tracking-[0.16em]" style={{ color: "var(--foreground)", fontFamily: "'Inter', sans-serif" }}>DERO MEBEL</span>
+              <span className="mt-0.5 hidden text-[8px] sm:block sm:text-[9px] font-black tracking-[0.18em]" style={{ color: "var(--swiss-yellow-dark)", fontFamily: "'Inter', sans-serif" }}>MARKET</span>
             </span>
-            <span
-              className="text-xs sm:text-sm md:text-lg font-black tracking-[0.13em] sm:tracking-[0.16em] mt-0.5"
-              style={{ color: "var(--swiss-yellow)", fontFamily: "'Inter', sans-serif" }}
-            >
-              MARKET
-            </span>
-          </div>
-        </div>
+          </Link>
 
-        <div className="container flex items-center gap-2 sm:gap-6 h-11 sm:h-12 border-t border-foreground/30">
-          <nav className="flex min-w-0 flex-1 items-center gap-3 sm:gap-6 overflow-x-auto whitespace-nowrap no-scrollbar">
+          <nav className="flex min-w-0 flex-1 items-center justify-start gap-3 overflow-x-auto whitespace-nowrap no-scrollbar sm:justify-center sm:gap-6">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-[10px] sm:text-sm font-semibold uppercase tracking-wider transition-colors duration-150 border-b-2 pb-0.5 ${
+                className={`rounded-full px-1 py-1 text-[9px] sm:px-2 sm:text-xs font-bold uppercase tracking-wider transition-colors duration-150 ${
                   location === item.href
-                    ? "border-swiss-yellow text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-foreground/30"
+                    ? "bg-foreground text-background"
+                    : "text-foreground/65 hover:bg-foreground/8 hover:text-foreground"
                 }`}
               >
                 {item.label}
@@ -69,7 +54,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
             ))}
           </nav>
 
-          <div className="flex shrink-0 border border-foreground text-[10px] sm:text-xs font-bold uppercase">
+          <div className="flex shrink-0 overflow-hidden rounded-full border border-foreground/30 bg-background/65 text-[9px] sm:text-[10px] font-bold uppercase">
             <button
               onClick={() => setLang("kk")}
               className={`px-2 py-1 transition-colors duration-150 ${
@@ -80,7 +65,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
             </button>
             <button
               onClick={() => setLang("ru")}
-              className={`px-2 py-1 transition-colors duration-150 border-l border-foreground ${
+              className={`px-2 py-1 transition-colors duration-150 border-l border-foreground/30 ${
                 lang === "ru" ? "bg-foreground text-background" : "hover:bg-muted"
               }`}
             >

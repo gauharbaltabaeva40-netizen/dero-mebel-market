@@ -3,6 +3,7 @@ import { ExternalLink, MessageCircle, RotateCcw, Send, Sparkles, X } from "lucid
 import { Streamdown } from "streamdown";
 import { trpc } from "@/lib/trpc";
 import { resolveChatProductAction } from "@/lib/chatProductActions";
+import { remainingTypingDuration } from "@/lib/chatTyping";
 import { useLang } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -111,6 +112,7 @@ function AiChatWidget({
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const typingStartedAt = useRef(0);
 
   const restart = useCallback(() => {
     setInput("");
@@ -142,24 +144,29 @@ function AiChatWidget({
     const userMessage: ChatMessage = { role: "user", content: trimmed };
     const history = [...messages, userMessage];
     setMessages(history);
+    typingStartedAt.current = Date.now();
     setIsTyping(true);
+    const completeReply = (appendReply: () => void) => {
+      window.setTimeout(() => {
+        setIsTyping(false);
+        appendReply();
+      }, remainingTypingDuration(typingStartedAt.current));
+    };
     chatMutation.mutate(
       { messages: history, lang, productId: contextProduct?.id },
       {
         onSuccess: (response) => {
-          setIsTyping(false);
           const meta = response.meta as ChatMessage["meta"];
-          setMessages((current) => [...current, { role: "assistant", content: response.text, meta }]);
+          completeReply(() => setMessages((current) => [...current, { role: "assistant", content: response.text, meta }]));
         },
         onError: () => {
-          setIsTyping(false);
-          setMessages((current) => [
+          completeReply(() => setMessages((current) => [
             ...current,
             {
               role: "assistant",
               content: lang === "kk" ? "Қазір жауапты дайындау мүмкін болмады. Қайта жазыңыз немесе каталогтан тауарды таңдаңыз." : "Сейчас не удалось подготовить ответ. Напишите ещё раз или выберите товар из каталога.",
             },
-          ]);
+          ]));
         },
       },
     );
@@ -229,7 +236,15 @@ function AiChatWidget({
                 </div>
               </div>
             ))}
-            {isTyping && <div className="flex justify-start"><span className="swiss-square mr-2 mt-1 size-4 shrink-0" /><div className="border border-foreground px-3.5 py-2.5 text-xs italic text-muted-foreground">{t.chat.typing}</div></div>}
+            {isTyping && (
+              <div className="flex justify-start" role="status" aria-live="polite">
+                <span className="swiss-square mr-2 mt-1 size-4 shrink-0" />
+                <div className="flex items-center gap-2 border border-foreground bg-muted/45 px-3.5 py-2.5 text-xs font-medium text-foreground">
+                  <span>{t.chat.typing}</span>
+                  <span className="chat-typing-dots" aria-hidden="true"><i /><i /><i /></span>
+                </div>
+              </div>
+            )}
           </div>
 
           {messages.length <= 1 && (

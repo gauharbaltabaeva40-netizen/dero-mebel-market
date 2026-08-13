@@ -16,4 +16,15 @@ describe("ruleChat product-context payment routing", () => {
       kaspiUrl: "https://kaspi.kz/shop/p/raspashnoi-shkaf-777-320x240h55-sm-belyi-113369956",
     });
   });
+
+  it("puts only exact beige 180x280x55 антресоль wardrobes ahead of generic wardrobe cards", async () => {
+    const result = await ruleChat(
+      [{ role: "user", content: "маған Шкаф антресольный, 180x280x55 см, бежевый керек" }],
+      "kk",
+    );
+
+    expect(result.meta.productAction).toBe("select");
+    expect(result.meta.recommendedProducts?.map((product) => product.id)).toEqual(expect.arrayContaining([30001, 90274]));
+    expect(result.meta.recommendedProducts?.every((product) => /180x280/i.test(`${product.nameKk} ${product.nameRu}`) && /беж/i.test(`${product.nameKk} ${product.nameRu}`))).toBe(true);
+  });
 });

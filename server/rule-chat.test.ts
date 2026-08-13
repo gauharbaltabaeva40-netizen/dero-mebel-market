@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectIntent, extractState, getPaymentProductAction, type RecommendedProduct } from "./routers/rule-chat";
+import { detectIntent, extractState, getPaymentProductAction, hasSpecificProductRequest, type RecommendedProduct } from "./routers/rule-chat";
 
 describe("extractState — bilingual parameter detection", () => {
   it("does not collect phone or name fields", () => {
@@ -38,6 +38,17 @@ describe("extractState — bilingual parameter detection", () => {
     const s2 = extractState([{ role: "user", content: "Шкаф купе раздвижной" }]);
     expect(s2.category).toBe("wardrobe");
     expect(s2.slidingDoors).toBe(true);
+  });
+
+  it("extracts a Russian exact wardrobe request with dimensions, colour, and антресоль type", () => {
+    const state = extractState([{ role: "user", content: "маған Шкаф антресольный, 180x280x55 см, бежевый керек" }]);
+    expect(state.category).toBe("wardrobe");
+    expect(state.requestedProductType).toBe("mezzanine");
+    expect(state.requestedColor).toBe("beige");
+    expect(state.requestedWidthMm).toBe(1800);
+    expect(state.requestedHeightMm).toBe(2800);
+    expect(state.requestedDepthMm).toBe(550);
+    expect(hasSpecificProductRequest(state)).toBe(true);
   });
 
   it("accumulates state across multiple messages", () => {

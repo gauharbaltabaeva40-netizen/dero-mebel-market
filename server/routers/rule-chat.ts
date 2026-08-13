@@ -31,6 +31,11 @@ export interface CollectedState {
   budgetKzt?: number;
   category?: "kitchen" | "wardrobe";
   style?: string;
+  requestedWidthMm?: number;
+  requestedHeightMm?: number;
+  requestedDepthMm?: number;
+  requestedColor?: "beige" | "white" | "black" | "brown" | "grey";
+  requestedProductType?: "mezzanine";
   deadline?: "fast" | "normal" | "far";
   slidingDoors?: boolean;
   delivery?: boolean;
@@ -126,6 +131,30 @@ function latestUserMessage(messages: ChatMessage[]): string {
   return [...messages].reverse().find((message) => message.role === "user")?.content ?? "";
 }
 
+const COLOR_MATCHERS = {
+  beige: /беж|құм түст|песочн/i,
+  white: /бел(ый|ая)|ақ\b/i,
+  black: /черн|қара\b/i,
+  brown: /коричн|қоңыр/i,
+  grey: /сер(ый|ая)|сұр/i,
+} as const;
+
+function dimensionToMm(value: string): number {
+  const numeric = Number.parseInt(value, 10);
+  return numeric > 0 && numeric < 1_000 ? numeric * 10 : numeric;
+}
+
+/** Identifies model-level criteria beyond a broad kitchen or wardrobe category. */
+export function hasSpecificProductRequest(state: CollectedState): boolean {
+  return Boolean(
+    state.requestedWidthMm ||
+      state.requestedHeightMm ||
+      state.requestedDepthMm ||
+      state.requestedColor ||
+      state.requestedProductType,
+  );
+}
+
 /** Extracts product preferences from user messages only; it never requests or stores contact details. */
 export function extractState(messages: ChatMessage[]): CollectedState {
   const text = messages.filter((message) => message.role === "user").map((message) => message.content).join("\n");
@@ -150,6 +179,19 @@ export function extractState(messages: ChatMessage[]): CollectedState {
 
   const styleMatch = text.match(/(классик|модерн|минимал|скандинав|лофт|неоклассик)/i);
   if (styleMatch) state.style = styleMatch[1].toLowerCase();
+  const dimensions = text.match(/(\d{2,4})\s*[xх×]\s*(\d{2,4})\s*[xх×]\s*(\d{2,4})/i);
+  if (dimensions) {
+    state.requestedWidthMm = dimensionToMm(dimensions[1]);
+    state.requestedHeightMm = dimensionToMm(dimensions[2]);
+    state.requestedDepthMm = dimensionToMm(dimensions[3]);
+  }
+  for (const [color, matcher] of Object.entries(COLOR_MATCHERS) as Array<[NonNullable<CollectedState["requestedColor"]>, RegExp]>) {
+    if (matcher.test(text)) {
+      state.requestedColor = color;
+      break;
+    }
+  }
+  if (/антресол/i.test(text)) state.requestedProductType = "mezzanine";
   if (/срочно|жедел|осы апта|на этой неделе/i.test(text)) state.deadline = "fast";
   else if (/екі айдан|через два месяца|через 2 месяца/i.test(text)) state.deadline = "far";
   else if (/осы жыл|в этом году/i.test(text)) state.deadline = "normal";
@@ -180,6 +222,29 @@ function productMeta(rows: Array<typeof products.$inferSelect>): RecommendedProd
   }));
 }
 
+function productSearchText(product: typeof products.$inferSelect): string {
+  const features = typeof product.features === "string" ? product.features : JSON.stringify(product.features ?? "");
+  return [product.nameKk, product.nameRu, features].join(" ").toLowerCase();
+}
+
+function productMatchScore(product: typeof products.$inferSelect, state: CollectedState): number {
+  const text = productSearchText(product);
+  let score = 0;
+  if (state.requestedProductType === "mezzanine") score += /антресол/i.test(text) ? 60 : -80;
+  if (state.requestedColor) score += COLOR_MATCHERS[state.requestedColor].test(text) ? 34 : -18;
+
+  const dimensions: Array<[number | undefined, unknown]> = [
+    [state.requestedWidthMm, product.widthMm],
+    [state.requestedHeightMm, product.heightMm],
+    [state.requestedDepthMm, product.depthMm],
+  ];
+  for (const [requested, actual] of dimensions) {
+    if (!requested) continue;
+    score += Number(actual) === requested ? 28 : -10;
+  }
+  return score;
+}
+
 /** Only an active, single Kaspi-linked product may expose a direct payment action. */
 export function getPaymentProductAction(productId: number | undefined, items: RecommendedProduct[]): "buy" | "select" {
   return productId && items.length === 1 && Boolean(items[0]?.kaspiUrl) ? "buy" : "select";
@@ -195,26 +260,34 @@ async function findProducts(
     if (current[0]?.kaspiUrl) return productMeta(current);
   }
 
+  const needsExactRanking = hasSpecificProductRequest(state);
   const rows = await db
     .select()
     .from(products)
     .where(and(eq(products.isPublished, true), state.category ? eq(products.category, state.category) : undefined))
-    .limit(12);
+    .limit(needsExactRanking ? 500 : 12);
 
-  const ranked = rows
+  const scored = rows
     .filter((product) => Boolean(product.kaspiUrl))
+    .map((product) => ({ product, exactScore: productMatchScore(product, state) }));
+  const ranked = scored
     .sort((a, b) => {
-      const styleA = state.style && a.style.toLowerCase().includes(state.style) ? 1 : 0;
-      const styleB = state.style && b.style.toLowerCase().includes(state.style) ? 1 : 0;
+      if (a.exactScore !== b.exactScore) return b.exactScore - a.exactScore;
+      const styleA = state.style && a.product.style.toLowerCase().includes(state.style) ? 1 : 0;
+      const styleB = state.style && b.product.style.toLowerCase().includes(state.style) ? 1 : 0;
       if (styleA !== styleB) return styleB - styleA;
-      if (state.budgetKzt && a.basePriceKzt != null && b.basePriceKzt != null) {
-        return Math.abs(a.basePriceKzt - state.budgetKzt) - Math.abs(b.basePriceKzt - state.budgetKzt);
+      if (state.budgetKzt && a.product.basePriceKzt != null && b.product.basePriceKzt != null) {
+        return Math.abs(a.product.basePriceKzt - state.budgetKzt) - Math.abs(b.product.basePriceKzt - state.budgetKzt);
       }
-      return (a.basePriceKzt ?? Number.MAX_SAFE_INTEGER) - (b.basePriceKzt ?? Number.MAX_SAFE_INTEGER);
-    })
-    .slice(0, 3);
+      return (a.product.basePriceKzt ?? Number.MAX_SAFE_INTEGER) - (b.product.basePriceKzt ?? Number.MAX_SAFE_INTEGER);
+    });
 
-  return productMeta(ranked);
+  const highestScore = ranked[0]?.exactScore ?? 0;
+  const exactRows = needsExactRanking && highestScore > 0
+    ? ranked.filter((candidate) => candidate.exactScore >= highestScore - 10).slice(0, 3)
+    : ranked.slice(0, 3);
+
+  return productMeta(exactRows.map((candidate) => candidate.product));
 }
 
 async function getFaqAnswer(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, lang: "kk" | "ru"): Promise<string> {
@@ -292,10 +365,15 @@ export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", produ
     const category = intent === "choose_kitchen" ? "kitchen" : intent === "choose_wardrobe" ? "wardrobe" : state.category;
     const matched = await findProducts(db, { ...state, category }, productId);
     if (matched.length > 0) {
+      const exactRequest = hasSpecificProductRequest(state);
       return {
         text: lang === "kk"
-          ? "Мына дайын үлгілер Kaspi-де сатылымда. Қалағаныңыздың «Kaspi-дан сатып алу» батырмасын басып, төлемге өте аласыз."
-          : "Эти готовые модели доступны на Kaspi. Нажмите «Купить на Kaspi» у нужного товара, чтобы перейти к оплате.",
+          ? exactRequest
+            ? `Сұрауыңызға сай ${matched.length} нақты үлгі таптым. Алдымен бір үлгіні таңдаңыз — содан кейін дәл сол тауардың Kaspi-дегі сатып алу бетіне өтесіз.`
+            : "Мына дайын үлгілер Kaspi-де сатылымда. Алдымен бір үлгіні таңдаңыз — содан кейін дәл сол тауардың Kaspi-дегі сатып алу бетіне өтесіз."
+          : exactRequest
+            ? `По вашему точному запросу найдено ${matched.length} подходящих варианта. Сначала выберите модель — затем перейдёте к покупке именно этого товара на Kaspi.`
+            : "Эти готовые модели доступны на Kaspi. Сначала выберите одну модель — затем перейдёте к покупке именно этого товара на Kaspi.",
         meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["price", "payment", "catalog"]) },
       };
     }

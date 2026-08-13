@@ -147,3 +147,21 @@
 - [x] Configure HMR for the managed HTTPS preview proxy without hardcoded localhost WebSocket targets
 - [x] Restart the dev preview and verify browser-console connection health without storefront regressions (public HTTPS preview loaded cleanly; a live HMR update was received at 05:52)
 - [x] Save and publish the resolved preview configuration (b9dd4e6e)
+
+## Phase 15 — Exact chat matching and typing feedback (user-reported)
+
+- [x] Reproduce and audit the failed bilingual exact-product request for the beige 180×280×55 антресоль шкаф (the rule engine was ranking a generic 12-item category subset and did not score dimensions, colour, or product terms)
+- [x] Make exact product-name, dimensions, colour, and category matching return the requested Kaspi-linked product first
+- [x] Add a zero-cost site-styled “жазып жатыр…” / “печатает…” typing indicator while the chatbot prepares a reply
+- [x] Add regression tests for exact KK/RU matching and typing-state behavior
+- [x] Verify the corrected conversation and responsive typing state on desktop and 375 px mobile (exact selection and matching Kaspi purchase action confirmed on both viewports; typing indicator displayed)
+- [x] Prepare the chatbot interaction improvement for the combined release (exact model matching, typing feedback, and tests complete)
+
+## Phase 16 — Glass navigation refinement (user request)
+
+- [x] Audit the current desktop and mobile header structure before the navigation restyle
+- [x] Replace the plain header navigation with a centered translucent blur/glass capsule while preserving accessible links
+- [x] Add a compact company-name label beside the official logo without competing with the existing brand wordmark
+- [x] Verify the new header with the chatbot improvements on desktop and 375 px mobile
+- [ ] Save checkpoint and deliver the combined chatbot and navigation refinement
+- [x] Keep the compact company label visible and start mobile navigation scrolling at the first link
