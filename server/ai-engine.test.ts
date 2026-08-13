@@ -117,9 +117,11 @@ import { afterEach, beforeAll, vi } from "vitest";
 
 describe("ai.chat never returns empty text", () => {
   let chatModule: typeof import("./routers/ai");
+  let dbModule: typeof import("./db");
   let llmModule: typeof import("./_core/llm");
 
   beforeAll(async () => {
+    dbModule = await import("./db");
     llmModule = await import("./_core/llm");
     chatModule = await import("./routers/ai");
   });
@@ -130,6 +132,15 @@ describe("ai.chat never returns empty text", () => {
 
   it("returns a visible fallback when the model keeps tool-calling past the cap", async () => {
     // Mock invokeLLM to always return tool_calls (runaway tool loop)
+    vi.spyOn(dbModule, "getDb").mockResolvedValue({
+      select: () => ({
+        from: () => ({
+          where: () => ({
+            limit: () => Promise.resolve([]),
+          }),
+        }),
+      }),
+    } as never);
     vi.spyOn(llmModule, "invokeLLM").mockResolvedValue({
       choices: [
         {
