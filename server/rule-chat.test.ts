@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectIntent, extractState, getPaymentProductAction, hasSpecificProductRequest, type RecommendedProduct } from "./routers/rule-chat";
+import { detectIntent, extractState, getPaymentProductAction, hasSpecificProductRequest, matchesBudget, type RecommendedProduct } from "./routers/rule-chat";
 
 describe("extractState — bilingual parameter detection", () => {
   it("does not collect phone or name fields", () => {
@@ -23,6 +23,15 @@ describe("extractState — bilingual parameter detection", () => {
     expect(s2.budgetKzt).toBe(1000000);
     const s3 = extractState([{ role: "user", content: "100 мың теңгеге дейін" }]);
     expect(s3.budgetKzt).toBe(100000);
+  });
+
+  it("extracts ready-made budget ranges in Kazakh and Russian", () => {
+    const kk = extractState([{ role: "user", content: "200 000–500 000 ₸" }]);
+    expect(kk.budgetMinKzt).toBe(200000);
+    expect(kk.budgetMaxKzt).toBe(500000);
+    const ru = extractState([{ role: "user", content: "до 200 000 ₸" }]);
+    expect(ru.budgetMaxKzt).toBe(200000);
+    expect(detectIntent("Выбрать бюджет")).toBe("budget");
   });
 
   it("extracts deadline signals", () => {
@@ -82,6 +91,8 @@ describe("autonomous sales intent routing", () => {
       id: 30012,
       nameKk: "Шкаф 777",
       nameRu: "Шкаф 777",
+      descriptionKk: "Екі есікті шкаф",
+      descriptionRu: "Двухдверный шкаф",
       photoUrl: null,
       basePriceKzt: 199999,
       priceUnit: "fixed",
@@ -91,6 +102,12 @@ describe("autonomous sales intent routing", () => {
     expect(active.kaspiUrl).toBe("https://kaspi.kz/shop/p/raspashnoi-shkaf-777-320x240h55-sm-belyi-113369956/");
     expect(getPaymentProductAction(undefined, [active])).toBe("select");
     expect(getPaymentProductAction(30012, [active, { ...active, id: 30013 }])).toBe("select");
+  });
+
+  it("keeps carousel recommendations inside the selected budget when a price is known", () => {
+    expect(matchesBudget(199000, { budgetMaxKzt: 200000 })).toBe(true);
+    expect(matchesBudget(500000, { budgetMaxKzt: 200000 })).toBe(false);
+    expect(matchesBudget(550000, { budgetMinKzt: 500000, budgetMaxKzt: 1000000 })).toBe(true);
   });
 });
 

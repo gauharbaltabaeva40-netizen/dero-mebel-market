@@ -9,6 +9,8 @@ export type RecommendedProduct = {
   id: number;
   nameKk: string;
   nameRu: string;
+  descriptionKk: string;
+  descriptionRu: string;
   photoUrl: string | null;
   basePriceKzt: number | null;
   priceUnit: string | null;
@@ -29,6 +31,8 @@ export interface ChatResult {
 export interface CollectedState {
   sizeMeters?: number;
   budgetKzt?: number;
+  budgetMinKzt?: number;
+  budgetMaxKzt?: number;
   category?: "kitchen" | "wardrobe";
   style?: string;
   requestedWidthMm?: number;
@@ -51,7 +55,13 @@ const QUICK = {
   price: R("Бағаны есептеу", "Рассчитать цену"),
   payment: R("Kaspi арқылы сатып алу", "Купить через Kaspi"),
   delivery: R("Жеткізу туралы", "О доставке"),
+  budget: R("Бюджетті таңдау", "Выбрать бюджет"),
 };
+
+const BUDGET_QUICK_REPLIES = {
+  kk: ["200 000 ₸ дейін", "200 000–500 000 ₸", "500 000–1 000 000 ₸", "1 000 000 ₸+"],
+  ru: ["до 200 000 ₸", "200 000–500 000 ₸", "500 000–1 000 000 ₸", "1 000 000 ₸+"],
+} as const;
 
 const FAQ_TEXTS: Record<string, ReturnType<typeof R>> = {
   material: R(
@@ -102,6 +112,7 @@ type Intent =
   | "calculate"
   | "choose_kitchen"
   | "choose_wardrobe"
+  | "budget"
   | "greeting";
 
 const INTENT_RULES: Array<{ intent: Intent; patterns: RegExp[] }> = [
@@ -117,6 +128,7 @@ const INTENT_RULES: Array<{ intent: Intent; patterns: RegExp[] }> = [
   { intent: "search_products", patterns: [/каталог|үлгі|модель|өнім|продукци|товар/i] },
   { intent: "choose_kitchen", patterns: [/ас үй|кухн/i] },
   { intent: "choose_wardrobe", patterns: [/шкаф|гардероб|киім/i] },
+  { intent: "budget", patterns: [/бюджет|баға диапазон|ценов.*диапазон|выбрать бюджет/i] },
   { intent: "greeting", patterns: [/сәлем|салем|привет|здравствуй|добрый|доброго/i] },
 ];
 
@@ -163,8 +175,24 @@ export function extractState(messages: ChatMessage[]): CollectedState {
   const sizeMatch = text.match(/(\d+(?:[.,]\d+)?)\s*(?:метр|м(?!\w))/i);
   if (sizeMatch) state.sizeMeters = Number.parseFloat(sizeMatch[1].replace(",", "."));
 
+  const compactBudgetText = text.replace(/\s/g, "").replace(/[—–]/g, "-");
+  const rangeMatch = compactBudgetText.match(/(\d+)-(\d+)₸/i);
+  const underMatch = compactBudgetText.match(/(?:до(\d+)₸|(\d+)₸дейін)/i);
+  const fromMatch = compactBudgetText.match(/(\d+)₸\+/i);
+  if (rangeMatch) {
+    state.budgetMinKzt = Number.parseInt(rangeMatch[1], 10);
+    state.budgetMaxKzt = Number.parseInt(rangeMatch[2], 10);
+    state.budgetKzt = Math.round((state.budgetMinKzt + state.budgetMaxKzt) / 2);
+  } else if (underMatch) {
+    state.budgetMaxKzt = Number.parseInt(underMatch[1] ?? underMatch[2], 10);
+    state.budgetKzt = state.budgetMaxKzt;
+  } else if (fromMatch) {
+    state.budgetMinKzt = Number.parseInt(fromMatch[1], 10);
+    state.budgetKzt = state.budgetMinKzt;
+  }
+
   const budgetMatch = text.match(/(\d[\d\s]*)\s*(?:мың|тыс|млн|тг|₸|тенге|теңге)/i);
-  if (budgetMatch) {
+  if (budgetMatch && !state.budgetKzt) {
     let amount = Number.parseFloat(budgetMatch[1].replace(/\s/g, ""));
     if (/тыс|мың/i.test(budgetMatch[0])) amount *= 1_000;
     if (/млн/i.test(budgetMatch[0])) amount *= 1_000_000;
@@ -210,11 +238,17 @@ function quickReplies(lang: "kk" | "ru", entries: Array<keyof typeof QUICK>): st
   return entries.map((entry) => QUICK[entry][lang]);
 }
 
+function budgetQuickReplies(lang: "kk" | "ru"): string[] {
+  return [...BUDGET_QUICK_REPLIES[lang]];
+}
+
 function productMeta(rows: Array<typeof products.$inferSelect>): RecommendedProduct[] {
   return rows.map((product) => ({
     id: product.id,
     nameKk: product.nameKk,
     nameRu: product.nameRu,
+    descriptionKk: product.descriptionKk ?? "",
+    descriptionRu: product.descriptionRu ?? "",
     photoUrl: product.photoUrl,
     basePriceKzt: product.basePriceKzt,
     priceUnit: product.priceUnit,
@@ -250,6 +284,12 @@ export function getPaymentProductAction(productId: number | undefined, items: Re
   return productId && items.length === 1 && Boolean(items[0]?.kaspiUrl) ? "buy" : "select";
 }
 
+export function matchesBudget(priceKzt: number | null, state: Pick<CollectedState, "budgetMinKzt" | "budgetMaxKzt">): boolean {
+  if (priceKzt == null) return false;
+  return (!state.budgetMinKzt || priceKzt >= state.budgetMinKzt)
+    && (!state.budgetMaxKzt || priceKzt <= state.budgetMaxKzt);
+}
+
 async function findProducts(
   db: NonNullable<Awaited<ReturnType<typeof getDb>>>,
   state: CollectedState,
@@ -283,9 +323,11 @@ async function findProducts(
     });
 
   const highestScore = ranked[0]?.exactScore ?? 0;
+  const withinBudget = ranked.filter(({ product }) => matchesBudget(product.basePriceKzt, state));
+  const budgetRanked = withinBudget.length > 0 ? withinBudget : ranked;
   const exactRows = needsExactRanking && highestScore > 0
-    ? ranked.filter((candidate) => candidate.exactScore >= highestScore - 10).slice(0, 3)
-    : ranked.slice(0, 3);
+    ? budgetRanked.filter((candidate) => candidate.exactScore >= highestScore - 10).slice(0, 3)
+    : budgetRanked.slice(0, 3);
 
   return productMeta(exactRows.map((candidate) => candidate.product));
 }
@@ -323,6 +365,25 @@ export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", produ
     return {
       text: lang === "kk" ? "Алдымен бір үлгіні таңдаңыз. Тауар бетін ашқаннан кейін мен сізді дәл сол тауардың Kaspi-дегі төлем бетіне жіберемін." : "Сначала выберите одну модель. После открытия страницы товара я направлю вас на страницу оплаты Kaspi именно этой модели.",
       meta: { recommendedProducts: choices, productAction: "select", quickReplies: quickReplies(lang, ["choose", "wardrobe", "catalog"]) },
+    };
+  }
+
+  if (intent === "budget") {
+    return {
+      text: lang === "kk"
+        ? "Бюджетіңізге сай дайын үлгілерді көрсету үшін диапазонды таңдаңыз. Кейін модельді қарап, Kaspi-дегі нақты сатып алу бетіне өтесіз."
+        : "Выберите диапазон бюджета, и я покажу готовые модели в этой сумме. Затем сможете посмотреть модель и перейти к её точной странице покупки на Kaspi.",
+      meta: { quickReplies: budgetQuickReplies(lang) },
+    };
+  }
+
+  if (state.budgetMinKzt || state.budgetMaxKzt) {
+    const matched = await findProducts(db, state, productId);
+    return {
+      text: lang === "kk"
+        ? "Осы бюджетке сай дайын үлгілерді көрсетіп тұрмын. Фото мен қысқаша сипаттаманы сырғытып қарап, бір үлгіні таңдаңыз."
+        : "Показываю готовые модели в этом бюджете. Листайте фото и краткие описания, затем выберите одну модель.",
+      meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["payment", "budget", "catalog"]) },
     };
   }
 
@@ -374,7 +435,7 @@ export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", produ
           : exactRequest
             ? `По вашему точному запросу найдено ${matched.length} подходящих варианта. Сначала выберите модель — затем перейдёте к покупке именно этого товара на Kaspi.`
             : "Эти готовые модели доступны на Kaspi. Сначала выберите одну модель — затем перейдёте к покупке именно этого товара на Kaspi.",
-        meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["price", "payment", "catalog"]) },
+        meta: { recommendedProducts: matched, productAction: "select", quickReplies: quickReplies(lang, ["price", "payment", "budget", "catalog"]) },
       };
     }
   }
@@ -382,7 +443,7 @@ export async function ruleChat(messages: ChatMessage[], lang: "kk" | "ru", produ
   if (intent === "greeting") {
     return {
       text: lang === "kk" ? "Сәлем! Мен Dero Mebel сату ассистентімін. Ас үй немесе шкафты таңдап, нақты Kaspi тауарына дейін апарамын. Нені іздеп жүрсіз?" : "Здравствуйте! Я ассистент по продажам Dero Mebel. Помогу выбрать кухню или шкаф и доведу до конкретного товара на Kaspi. Что ищете?",
-      meta: { quickReplies: quickReplies(lang, ["choose", "wardrobe", "catalog"]) },
+      meta: { quickReplies: quickReplies(lang, ["choose", "wardrobe", "budget", "catalog"]) },
     };
   }
 

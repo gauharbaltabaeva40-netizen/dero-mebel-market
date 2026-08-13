@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { ExternalLink, MessageCircle, RotateCcw, Send, Sparkles, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink, MessageCircle, RotateCcw, Send, Sparkles, X } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { trpc } from "@/lib/trpc";
-import { resolveChatProductAction } from "@/lib/chatProductActions";
+import { isBudgetQuickReply, resolveChatProductAction } from "@/lib/chatProductActions";
 import { remainingTypingDuration } from "@/lib/chatTyping";
 import { useLang } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,8 @@ type RecommendedProduct = {
   id: number;
   nameKk: string;
   nameRu: string;
+  descriptionKk?: string;
+  descriptionRu?: string;
   photoUrl?: string | null;
   basePriceKzt?: number | null;
   priceUnit?: string | null;
@@ -49,8 +51,8 @@ const greetings = {
 };
 
 const starterActions = {
-  kk: ["Ас үй", "Шкаф", "Каталогты көрсету", "Бағаны есептеу"],
-  ru: ["Кухня", "Шкаф", "Показать каталог", "Рассчитать цену"],
+  kk: ["Ас үй", "Шкаф", "Бюджетті таңдау", "Каталогты көрсету"],
+  ru: ["Кухня", "Шкаф", "Выбрать бюджет", "Показать каталог"],
 };
 
 export function ChatProvider({ children }: { children: ReactNode }) {
@@ -92,6 +94,55 @@ function useChatBackend() {
 function formatPrice(price: number | null | undefined, lang: "kk" | "ru") {
   if (price == null) return lang === "kk" ? "Бағасы Kaspi-де" : "Цена на Kaspi";
   return `${price.toLocaleString(lang === "kk" ? "kk-KZ" : "ru-RU")} ₸`;
+}
+
+function ProductPreviewCarousel({
+  products,
+  actionType,
+  lang,
+}: {
+  products: RecommendedProduct[];
+  actionType: "buy" | "select" | undefined;
+  lang: "kk" | "ru";
+}) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const scroll = (direction: -1 | 1) => trackRef.current?.scrollBy({ left: direction * 248, behavior: "smooth" });
+  const title = lang === "kk" ? "Тауарды суреттерімен қарап шығыңыз" : "Посмотрите товары с фотографиями";
+
+  return (
+    <section className="mt-3 border-t border-foreground/20 pt-3" aria-label={title}>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p className="text-[10px] font-black uppercase tracking-[0.1em] text-foreground/65">{title}</p>
+        {products.length > 1 && (
+          <div className="flex gap-1">
+            <button type="button" onClick={() => scroll(-1)} aria-label={lang === "kk" ? "Алдыңғы тауарлар" : "Предыдущие товары"} className="flex size-6 items-center justify-center border border-foreground/35 transition-colors hover:bg-foreground hover:text-background"><ChevronLeft className="size-3" /></button>
+            <button type="button" onClick={() => scroll(1)} aria-label={lang === "kk" ? "Келесі тауарлар" : "Следующие товары"} className="flex size-6 items-center justify-center border border-foreground/35 transition-colors hover:bg-foreground hover:text-background"><ChevronRight className="size-3" /></button>
+          </div>
+        )}
+      </div>
+      <div ref={trackRef} className="flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-1 no-scrollbar">
+        {products.map((product) => {
+          const action = resolveChatProductAction(product, actionType);
+          const name = lang === "kk" ? product.nameKk : product.nameRu;
+          const description = lang === "kk" ? product.descriptionKk : product.descriptionRu;
+          return (
+            <article key={product.id} className="w-[212px] shrink-0 snap-start overflow-hidden border border-foreground/30 bg-muted/20">
+              {product.photoUrl ? <img src={product.photoUrl} alt={name} className="aspect-[4/3] w-full object-cover" loading="lazy" /> : <div className="aspect-[4/3] bg-muted" aria-hidden="true" />}
+              <div className="p-2.5">
+                <p className="line-clamp-2 text-xs font-bold leading-snug">{name}</p>
+                {description && <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-foreground/65">{description}</p>}
+                <p className="mt-2 text-[11px] font-black" style={{ color: "var(--swiss-yellow-dark)" }}>{formatPrice(product.basePriceKzt, lang)}</p>
+                <a href={action.href} target={action.target} rel={action.isPurchase ? "noopener noreferrer" : undefined} className="mt-2 flex h-8 items-center justify-center gap-1 bg-foreground px-2 text-[10px] font-black uppercase tracking-wide text-background transition-opacity hover:opacity-75">
+                  {action.isPurchase ? (lang === "kk" ? "Kaspi-дан сатып алу" : "Купить на Kaspi") : (lang === "kk" ? "Үлгіні таңдау" : "Выбрать модель")}
+                  {action.isPurchase && <ExternalLink className="size-3" />}
+                </a>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
 }
 
 function AiChatWidget({
@@ -201,36 +252,12 @@ function AiChatWidget({
                   <Streamdown>{message.content}</Streamdown>
 
                   {message.meta?.recommendedProducts && message.meta.recommendedProducts.length > 0 && (
-                    <div className="mt-3 space-y-2 border-t border-foreground/20 pt-3">
-                      {message.meta.recommendedProducts.map((product) => {
-                        const action = resolveChatProductAction(product, message.meta?.productAction);
-                        return (
-                          <article key={product.id} className="border border-foreground/30 bg-muted/20 p-2.5">
-                            <div className="flex gap-2.5">
-                              {product.photoUrl && <img src={product.photoUrl} alt="" className="size-12 shrink-0 object-cover" loading="lazy" />}
-                              <div className="min-w-0 flex-1">
-                                <p className="line-clamp-2 text-xs font-bold">{lang === "kk" ? product.nameKk : product.nameRu}</p>
-                                <p className="mt-0.5 text-[11px] font-semibold" style={{ color: "var(--swiss-yellow-dark)" }}>{formatPrice(product.basePriceKzt, lang)}</p>
-                              </div>
-                            </div>
-                            <a
-                              href={action.href}
-                              target={action.target}
-                              rel={action.isPurchase ? "noopener noreferrer" : undefined}
-                              className="mt-2 flex h-8 items-center justify-center gap-1 bg-foreground px-2 text-[10px] font-black uppercase tracking-wide text-background transition-opacity hover:opacity-75"
-                            >
-                              {action.isPurchase ? (lang === "kk" ? "Kaspi-дан сатып алу" : "Купить на Kaspi") : (lang === "kk" ? "Үлгіні таңдау" : "Выбрать модель")}
-                              {action.isPurchase && <ExternalLink className="size-3" />}
-                            </a>
-                          </article>
-                        );
-                      })}
-                    </div>
+                    <ProductPreviewCarousel products={message.meta.recommendedProducts} actionType={message.meta.productAction} lang={lang} />
                   )}
 
                   {message.meta?.quickReplies && message.meta.quickReplies.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1.5 border-t border-foreground/20 pt-3">
-                      {message.meta.quickReplies.map((reply) => <button key={reply} onClick={() => sendMessage(reply)} disabled={chatMutation.isPending} className="border border-foreground/50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide transition-colors hover:bg-foreground hover:text-background disabled:opacity-50">{reply}</button>)}
+                      {message.meta.quickReplies.map((reply) => <button key={reply} onClick={() => sendMessage(reply)} disabled={chatMutation.isPending} data-chat-reply-type={isBudgetQuickReply(reply) ? "budget" : "general"} className="border border-foreground/50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide transition-colors hover:bg-foreground hover:text-background disabled:opacity-50">{reply}</button>)}
                     </div>
                   )}
                 </div>

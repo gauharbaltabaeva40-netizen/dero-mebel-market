@@ -27,11 +27,13 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col bg-muted/50">
       {/* Four-sided page frame: outer padding on all sides */}
-      <div className="flex-1 flex flex-col m-1 sm:m-2 md:m-4 lg:m-6">
-      <header className="sticky top-2 z-40 px-1 sm:px-2">
+      <div className="flex-1 flex flex-col m-2 sm:m-3 md:m-6 lg:m-8">
+      <header className="motion-fade-up sticky top-3 z-40 px-1 sm:px-2">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-2 rounded-[1.65rem] border border-foreground/20 bg-background/72 px-2 py-2 shadow-[0_12px_32px_rgba(0,0,0,0.10)] backdrop-blur-xl sm:gap-4 sm:px-4">
           <Link href="/" className="flex shrink-0 items-center gap-1 rounded-full px-1 py-0.5 transition-opacity hover:opacity-70" aria-label="Dero Mebel Market">
-            <img src={LOGO_URL} alt="" className="size-7 sm:size-9 w-auto object-contain" />
+            <span className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full border border-foreground/20 bg-background sm:size-9">
+              <img src={LOGO_URL} alt="" className="size-full object-cover" />
+            </span>
             <span className="flex flex-col leading-none select-none">
               <span className="text-[6px] sm:text-[9px] font-black tracking-[0.08em] sm:tracking-[0.16em]" style={{ color: "var(--foreground)", fontFamily: "'Inter', sans-serif" }}>DERO MEBEL</span>
               <span className="mt-0.5 hidden text-[8px] sm:block sm:text-[9px] font-black tracking-[0.18em]" style={{ color: "var(--swiss-yellow-dark)", fontFamily: "'Inter', sans-serif" }}>MARKET</span>
@@ -75,10 +77,10 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1 py-6 md:py-8">{children}</main>
+      <main className="site-main flex-1 py-8 md:py-10">{children}</main>
       <ChatTrigger />
 
-      <footer className="border border-foreground bg-foreground text-background">
+      <footer className="motion-fade-up border border-foreground bg-foreground text-background">
         <div className="container py-10 grid md:grid-cols-3 gap-8">
           <div>
             <div className="flex items-center gap-3 mb-4">

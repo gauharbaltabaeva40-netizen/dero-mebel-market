@@ -165,3 +165,35 @@
 - [x] Verify the new header with the chatbot improvements on desktop and 375 px mobile
 - [x] Save and publish the combined chatbot and navigation refinement (114573db)
 - [x] Keep the compact company label visible and start mobile navigation scrolling at the first link
+
+## Phase 17 — Product preview carousel, budget replies, and circular logo (user request)
+
+- [x] Audit catalog image availability and current chat recommendation payloads (all 384 published products have a verified primary photo; the catalog does not yet provide additional per-product gallery images)
+- [x] Show a compact product carousel with several real product photos and short KK/RU descriptions before the Kaspi purchase action (real primary photos rotate across matching products; no fabricated gallery media)
+- [x] Add bilingual budget-range quick replies and map them to catalog filtering
+- [x] Make the official navigation logo circular while preserving its visibility on desktop and mobile
+- [x] Add regression tests for preview-card and budget-range actions
+- [x] Verify carousel interactions, budget selection, and circular logo styling on desktop and 375 px mobile
+- [x] Add client-side helper-level regression coverage for carousel preview actions and budget quick-reply configuration (selection cards remain local; confirmed purchases use the exact Kaspi URL and `_blank`)
+- [x] Recognize all Russian budget quick-reply labels in the client-side quick-reply configuration and extend its test coverage
+- [x] Exercise budget quick replies and product-preview carousel actions in the 375 px mobile chat widget (three real preview photos and model-selection action confirmed)
+- [ ] Save checkpoint and deliver the enhanced chatbot and navigation release
+
+## Phase 18 — Motion, wider frame, and Kaspi-link repair (user request)
+
+- [x] Audit current page-frame spacing, reveal animations, and all Kaspi purchase actions (purchase actions already use direct external Kaspi anchors; model-selection actions deliberately open the local product page first)
+- [x] Add restrained fade-up reveal motion that respects reduced-motion preferences
+- [x] Increase the website’s four-sided frame spacing without reducing mobile usability
+- [x] Ensure every Kaspi purchase control opens its exact Kaspi product URL in a new tab
+- [x] Add regression coverage and verify desktop/mobile layout plus direct Kaspi-link behavior (TypeScript clean; Vitest 39/39; live chat checks confirmed exact Kaspi new-tab action)
+- [x] Add focused UI-action regression coverage for direct Kaspi new-tab links used by chat product cards
+- [ ] Save checkpoint and deliver the refined storefront release
+
+## Phase 17 — Initial duplicate checklist (superseded by the scoped checklist above)
+
+- [x] Superseded duplicate audit item; consolidated into Phase 17 above
+- [x] Superseded duplicate carousel item; consolidated into Phase 17 above
+- [x] Superseded duplicate budget-range item; consolidated into Phase 17 above
+- [x] Superseded duplicate test item; consolidated into Phase 17 above
+- [x] Superseded duplicate verification item; consolidated into Phase 17 above
+- [x] Superseded duplicate release item; consolidated into the combined Phase 17–18 release
