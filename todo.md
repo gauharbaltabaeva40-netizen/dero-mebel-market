@@ -263,3 +263,10 @@
 - [x] Add GitHub Actions CI for dependency installation, TypeScript checks, and Vitest
 - [x] Validate the new README and workflow locally, then push them to the private GitHub repository (Prettier clean; TypeScript clean; 51/51 Vitest checks passed without database credentials)
 - [x] Verify the GitHub Actions run and deliver the repository improvements (Quality checks run 31709253586 completed successfully)
+
+## Phase 25 — Main branch protection and GitHub Pages access (user request)
+
+- [ ] Inspect the private repository’s current branch-protection controls and GitHub Pages configuration
+- [ ] Protect `main` with pull-request review, successful Quality checks, and blocked force-push/delete operations
+- [ ] Diagnose the reported GitHub Pages URL access issue without altering the live Manus website
+- [ ] Verify the applied repository controls and reachable public site, then deliver the outcome
