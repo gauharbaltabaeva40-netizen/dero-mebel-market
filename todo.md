@@ -140,3 +140,10 @@
 - [x] Exercise discovery, product selection, and exact-Kaspi checkout as one desktop chat journey (selected /products/30003; chat offered only that model’s Kaspi URL)
 - [x] Exercise discovery, product selection, and exact-Kaspi checkout as one 375 px phone chat journey (selected /products/30003; chat offered only that model’s Kaspi URL)
 - [x] Save and publish the autonomous Kaspi-sales chatbot release (40c2b3d8)
+
+## Phase 14 — Dev-preview HMR WebSocket repair (user-reported)
+
+- [x] Inspect Vite HMR configuration and the current preview WebSocket error evidence
+- [x] Configure HMR for the managed HTTPS preview proxy without hardcoded localhost WebSocket targets
+- [x] Restart the dev preview and verify browser-console connection health without storefront regressions (public HTTPS preview loaded cleanly; a live HMR update was received at 05:52)
+- [ ] Save checkpoint and report the resolved preview configuration
