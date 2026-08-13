@@ -146,4 +146,4 @@
 - [x] Inspect Vite HMR configuration and the current preview WebSocket error evidence
 - [x] Configure HMR for the managed HTTPS preview proxy without hardcoded localhost WebSocket targets
 - [x] Restart the dev preview and verify browser-console connection health without storefront regressions (public HTTPS preview loaded cleanly; a live HMR update was received at 05:52)
-- [ ] Save checkpoint and report the resolved preview configuration
+- [x] Save and publish the resolved preview configuration (b9dd4e6e)
