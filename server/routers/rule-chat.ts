@@ -45,6 +45,7 @@ export interface CollectedState {
   sizePreferenceCaptured?: boolean;
   colorPreferenceCaptured?: boolean;
   materialPreferenceCaptured?: boolean;
+  stylePreferenceCaptured?: boolean;
   budgetPreferenceCaptured?: boolean;
   deadline?: "fast" | "normal" | "far";
   slidingDoors?: boolean;
@@ -64,6 +65,7 @@ const QUICK = {
   budget: R("Бюджетті таңдау", "Выбрать бюджет"),
   color: R("Түсті таңдау", "Выбрать цвет"),
   material: R("Материалды таңдау", "Выбрать материал"),
+  style: R("Стильді таңдау", "Выбрать стиль"),
 };
 
 const BUDGET_QUICK_REPLIES = {
@@ -84,6 +86,11 @@ const COLOR_QUICK_REPLIES = {
 const MATERIAL_QUICK_REPLIES = {
   kk: ["ЛДСП", "МДФ", "Массив ағаш", "Барлық материалдар"],
   ru: ["ЛДСП", "МДФ", "Массив дерева", "Все материалы"],
+} as const;
+
+const STYLE_QUICK_REPLIES = {
+  kk: ["Заманауи", "Минимализм", "Лофт", "Классика", "Стиль маңызды емес"],
+  ru: ["Современный", "Минимализм", "Лофт", "Классика", "Стиль не важен"],
 } as const;
 
 const FAQ_TEXTS: Record<string, ReturnType<typeof R>> = {
@@ -138,6 +145,7 @@ type Intent =
   | "budget"
   | "choose_color"
   | "choose_material"
+  | "choose_style"
   | "greeting";
 
 const INTENT_RULES: Array<{ intent: Intent; patterns: RegExp[] }> = [
@@ -147,6 +155,7 @@ const INTENT_RULES: Array<{ intent: Intent; patterns: RegExp[] }> = [
   { intent: "faq_price", patterns: [/баға|цена|стоимост|қанша тұрады|сколько стоит|сколько будет|құны|тұрады/i] },
   { intent: "choose_color", patterns: [/түсті таңдау|түсін таңдау|выбрать цвет/i, /ақ түс|беж түс|сұр түс|қоңыр\/венге|барлық түстер/i, /белый цвет|бежевый цвет|серый цвет|коричневый\/венге|все цвета/i] },
   { intent: "choose_material", patterns: [/материалды таңдау|выбрать материал/i, /^лдсп$/i, /^мдф$/i, /массив ағаш|массив дерева|барлық материалдар|все материалы/i] },
+  { intent: "choose_style", patterns: [/стильді таңдау|выбрать стиль/i, /^заманауи$|^современный$|^минимализм$|^лофт$|^классика$|стиль маңызды емес|стиль не важен/i] },
   { intent: "faq_material", patterns: [/материал|фасад|мдф|лдсп|дсп|ламина|древес|массив/i] },
   { intent: "faq_delivery", patterns: [/жеткізу|доставк|әкелу/i] },
   { intent: "faq_install", patterns: [/орнату|монтаж|жинау|сборк|установка/i] },
@@ -188,6 +197,13 @@ const COLOR_RESET_MATCHER = /барлық түстер|все цвета/i;
 const MATERIAL_RESET_MATCHER = /барлық материалдар|все материалы/i;
 const SIZE_SKIP_MATCHER = /өлшем маңызды емес|размер не важен|кез келген өлшем|любой размер/i;
 const BUDGET_SKIP_MATCHER = /бюджет маңызды емес|бюджет не важен/i;
+const STYLE_SKIP_MATCHER = /стиль маңызды емес|стиль не важен/i;
+const STYLE_MATCHERS = {
+  modern: /заманауи|современн|модерн/i,
+  minimalist: /минимал/i,
+  loft: /лофт/i,
+  classic: /классик/i,
+} as const;
 
 function dimensionToMm(value: string): number {
   const numeric = Number.parseInt(value, 10);
@@ -245,8 +261,18 @@ export function extractState(messages: ChatMessage[]): CollectedState {
   else if (/ас үй|кухн/i.test(text)) state.category = "kitchen";
   else if (/шкаф|гардероб|киім/i.test(text)) state.category = "wardrobe";
 
-  const styleMatch = text.match(/(классик|модерн|минимал|скандинав|лофт|неоклассик)/i);
-  if (styleMatch) state.style = styleMatch[1].toLowerCase();
+  const styleSelection = [...userMessages].reverse().find((message) => (
+    STYLE_SKIP_MATCHER.test(message.content) || Object.values(STYLE_MATCHERS).some((matcher) => matcher.test(message.content))
+  ));
+  if (styleSelection && !STYLE_SKIP_MATCHER.test(styleSelection.content)) {
+    for (const [style, matcher] of Object.entries(STYLE_MATCHERS)) {
+      if (matcher.test(styleSelection.content)) {
+        state.style = style;
+        break;
+      }
+    }
+  }
+  if (styleSelection) state.stylePreferenceCaptured = true;
   const dimensions = text.match(/(\d{2,4})\s*[xх×]\s*(\d{2,4})\s*[xх×]\s*(\d{2,4})/i);
   if (dimensions) {
     state.requestedWidthMm = dimensionToMm(dimensions[1]);
@@ -329,15 +355,20 @@ function materialQuickReplies(lang: "kk" | "ru"): string[] {
   return [...MATERIAL_QUICK_REPLIES[lang]];
 }
 
+function styleQuickReplies(lang: "kk" | "ru"): string[] {
+  return [...STYLE_QUICK_REPLIES[lang]];
+}
+
 function sizeQuickReplies(lang: "kk" | "ru"): string[] {
   return [...SIZE_QUICK_REPLIES[lang]];
 }
 
-type GuidedPreferenceStep = "category" | "size" | "color" | "material" | "budget";
+type GuidedPreferenceStep = "category" | "style" | "size" | "color" | "material" | "budget";
 
 /** Returns the next explicit filtering choice required before a product carousel is displayed. */
 export function getGuidedPreferenceStep(state: CollectedState): GuidedPreferenceStep | null {
   if (!state.category) return "category";
+  if (!state.stylePreferenceCaptured) return "style";
   if (!state.sizePreferenceCaptured) return "size";
   if (!state.colorPreferenceCaptured) return "color";
   if (!state.materialPreferenceCaptured) return "material";
@@ -356,6 +387,12 @@ function guidedPreferenceReply(lang: "kk" | "ru", step: GuidedPreferenceStep): C
     return {
       text: lang === "kk" ? "Ен × биіктік × тереңдік өлшемін мм-мен жазыңыз. Мысалы: **180×240×55**. Өлшем шешуші болмаса, төменнен өткізіп жіберуге болады." : "Укажите размер в мм: ширина × высота × глубина. Например: **180×240×55**. Если размер не принципиален, пропустите этот шаг кнопкой ниже.",
       meta: { quickReplies: sizeQuickReplies(lang) },
+    };
+  }
+  if (step === "style") {
+    return {
+      text: lang === "kk" ? "Референске немесе өз талғамыңызға жақын стильді таңдаңыз. Бұл таңдау каталогты тегін іріктеуге көмектеседі." : "Выберите стиль, близкий к референсу или вашему вкусу. Этот выбор поможет бесплатно отфильтровать каталог.",
+      meta: { quickReplies: styleQuickReplies(lang) },
     };
   }
   if (step === "color") {
@@ -386,6 +423,7 @@ function activeFilterLabels(lang: "kk" | "ru", state: CollectedState): string[] 
     ru: { ldsp: "ЛДСП", mdf: "МДФ", wood: "массив дерева" },
   } as const;
   const labels: Array<string | undefined> = [
+    state.style,
     state.requestedColor ? colors[lang][state.requestedColor] : undefined,
     state.requestedMaterial ? materials[lang][state.requestedMaterial] : undefined,
   ];
@@ -482,8 +520,8 @@ async function findProducts(
   const ranked = scored
     .sort((a, b) => {
       if (a.exactScore !== b.exactScore) return b.exactScore - a.exactScore;
-      const styleA = state.style && a.product.style.toLowerCase().includes(state.style) ? 1 : 0;
-      const styleB = state.style && b.product.style.toLowerCase().includes(state.style) ? 1 : 0;
+      const styleA = state.style && (a.product.style ?? "").toLowerCase().includes(state.style) ? 1 : 0;
+      const styleB = state.style && (b.product.style ?? "").toLowerCase().includes(state.style) ? 1 : 0;
       if (styleA !== styleB) return styleB - styleA;
       if (state.budgetKzt && a.product.basePriceKzt != null && b.product.basePriceKzt != null) {
         return Math.abs(a.product.basePriceKzt - state.budgetKzt) - Math.abs(b.product.basePriceKzt - state.budgetKzt);

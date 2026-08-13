@@ -21,6 +21,7 @@ describe("ruleChat product-context routing", () => {
     const result = await ruleChat(
       [
         { role: "user", content: "маған Шкаф антресольный, 180x280x55 см, бежевый керек" },
+        { role: "user", content: "Стиль маңызды емес" },
         { role: "user", content: "Барлық материалдар" },
         { role: "user", content: "Бюджет маңызды емес" },
       ],
@@ -36,6 +37,8 @@ describe("ruleChat product-context routing", () => {
     const result = await ruleChat(
       [
         { role: "user", content: "Ас үй" },
+        { role: "assistant", content: "Стильді таңдаңыз" },
+        { role: "user", content: "Стиль маңызды емес" },
         { role: "assistant", content: "Өлшемді жазыңыз" },
         { role: "user", content: "Өлшем маңызды емес" },
         { role: "assistant", content: "Түсті таңдаңыз" },

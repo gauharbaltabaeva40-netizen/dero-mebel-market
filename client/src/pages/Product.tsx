@@ -182,6 +182,13 @@ export default function Product() {
           </div>
 
           <div className="mt-6 flex flex-col gap-3">
+            {directKaspiAvailable && (
+              <Button asChild size="lg" className="rounded-none h-12 bg-swiss-yellow hover:bg-swiss-yellow/90 text-black font-bold uppercase tracking-wider text-sm active:scale-[0.97] transition-transform">
+                <a href={product.kaspiUrl ?? undefined} target="_blank" rel="noopener noreferrer">
+                  {t.catalog.buyKaspi}
+                </a>
+              </Button>
+            )}
             <Button
               size="lg"
               className="rounded-none h-12 bg-swiss-yellow hover:bg-swiss-yellow/90 text-black font-bold uppercase tracking-wider text-sm active:scale-[0.97] transition-transform"

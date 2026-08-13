@@ -44,6 +44,11 @@ export default function Catalog() {
       .sort(([, a], [, b]) => a.localeCompare(b));
   }, [products, lang]);
 
+  const styles = useMemo(() => {
+    if (!products) return [];
+    return Array.from(new Set(products.map((product) => product.style).filter(Boolean))).sort();
+  }, [products]);
+
   const filtered = useMemo(() => {
     if (!products) return [];
     return products.filter((p) => {
@@ -98,7 +103,7 @@ export default function Catalog() {
             <div className="p-4 space-y-6 overflow-y-auto overscroll-contain">
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest mb-3 text-muted-foreground">
-                  {t.catalog.category}
+                  {t.catalog.roomType}
                 </p>
                   <div className="flex flex-col gap-1 max-h-44 overflow-y-auto overscroll-contain">
                     {[
@@ -134,7 +139,7 @@ export default function Catalog() {
                   >
                     {t.catalog.all}
                   </button>
-                  {(Object.keys(t.catalog.styleTags) as string[]).map((s) => (
+                  {styles.map((s) => (
                     <button
                       key={s}
                       onClick={() => setStyle(s)}
@@ -328,6 +333,16 @@ export default function Catalog() {
                       >
                         {lang === "kk" ? "Толығырақ" : "Подробнее"}
                       </Link>
+                      {p.kaspiUrl && p.kaspiVerified && (
+                        <a
+                          href={p.kaspiUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 block bg-swiss-yellow px-3 py-2.5 text-center text-xs font-bold uppercase tracking-widest text-black transition-colors hover:bg-swiss-yellow/85 active:scale-[0.97] touch-manipulation"
+                        >
+                          {t.catalog.buyKaspi}
+                        </a>
+                      )}
                     </div>
                   </article>
                 ))}

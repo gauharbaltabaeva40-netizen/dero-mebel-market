@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight, MessageCircle, RotateCcw, Send, Sparkles, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, ImagePlus, MessageCircle, RotateCcw, Send, Sparkles, X } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { trpc } from "@/lib/trpc";
 import { isBudgetQuickReply, isCategoryQuickReply, isColorQuickReply, isMaterialQuickReply, resolveChatProductAction } from "@/lib/chatProductActions";
@@ -162,14 +162,24 @@ function AiChatWidget({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [referenceImage, setReferenceImage] = useState<string>();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const typingStartedAt = useRef(0);
 
   const restart = useCallback(() => {
     setInput("");
     setIsTyping(false);
+    setReferenceImage((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return undefined;
+    });
     setMessages([{ role: "assistant", content: greetings[lang] }]);
   }, [lang]);
+
+  useEffect(() => () => {
+    if (referenceImage) URL.revokeObjectURL(referenceImage);
+  }, [referenceImage]);
 
   useEffect(() => {
     if (open && messages.length === 0) restart();
@@ -223,6 +233,30 @@ function AiChatWidget({
     );
   }
 
+  function handleReferenceImage(file?: File) {
+    if (!file || !file.type.startsWith("image/")) return;
+    if (file.size > 8 * 1024 * 1024) {
+      setMessages((current) => [...current, { role: "assistant", content: lang === "kk" ? "Сурет 8 МБ-тан аспауы керек. Кішірек файлды жүктеп көріңіз." : "Размер изображения не должен превышать 8 МБ. Загрузите файл поменьше." }]);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setReferenceImage((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return url;
+    });
+    setMessages((current) => [
+      ...current,
+      { role: "user", content: lang === "kk" ? "Референс суретін жүктедім" : "Я загрузил(а) референсное изображение" },
+      {
+        role: "assistant",
+        content: lang === "kk"
+          ? "Сурет тек осы браузерде алдын ала көрсетіледі және серверге жіберілмейді. Ұқсас үлгілерді тегін іріктеу үшін алдымен жиһаз орналасатын бөлмені таңдаңыз."
+          : "Изображение показывается только в этом браузере и не отправляется на сервер. Чтобы бесплатно подобрать похожие модели, сначала выберите комнату для мебели.",
+        meta: { quickReplies: starterActions[lang] },
+      },
+    ]);
+  }
+
   return (
     <div
       className={`fixed inset-0 z-[60] flex transition-all duration-300 ${open ? "opacity-100" : "pointer-events-none opacity-0"}`}
@@ -245,6 +279,16 @@ function AiChatWidget({
           </header>
 
           <div ref={scrollRef} className="mx-auto flex w-full max-w-5xl flex-1 flex-col space-y-4 overflow-y-auto p-4 sm:p-6">
+            {referenceImage && (
+              <aside className="flex items-center gap-3 border border-foreground/30 bg-muted/30 p-2.5" aria-label={lang === "kk" ? "Жүктелген референс суреті" : "Загруженное референсное изображение"}>
+                <img src={referenceImage} alt={lang === "kk" ? "Жиһаз стиліне арналған референс" : "Референс стиля мебели"} className="size-16 object-cover" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.1em]">{lang === "kk" ? "Референс суреті" : "Референсное изображение"}</p>
+                  <p className="mt-0.5 text-[11px] text-foreground/65">{lang === "kk" ? "Бөлме, стиль және түс таңдаулары бойынша тегін іріктеу" : "Бесплатный подбор по комнате, стилю и цвету"}</p>
+                </div>
+                <button type="button" onClick={() => setReferenceImage((current) => { if (current) URL.revokeObjectURL(current); return undefined; })} className="p-1.5 text-foreground/65 transition-colors hover:bg-foreground hover:text-background" aria-label={lang === "kk" ? "Суретті алып тастау" : "Удалить изображение"}><X className="size-4" /></button>
+              </aside>
+            )}
             {messages.map((message, index) => (
               <div key={`${message.role}-${index}`} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                 {message.role === "assistant" && <span className="swiss-square mr-2 mt-1 size-4 shrink-0" />}
@@ -284,6 +328,8 @@ function AiChatWidget({
           )}
 
           <form onSubmit={(event) => { event.preventDefault(); sendMessage(input); }} className="mx-auto flex w-full max-w-5xl gap-2 border-t-2 border-foreground p-3 sm:px-6">
+            <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { handleReferenceImage(event.target.files?.[0]); event.currentTarget.value = ""; }} className="sr-only" />
+            <Button type="button" size="icon" variant="outline" onClick={() => imageInputRef.current?.click()} disabled={chatMutation.isPending} aria-label={lang === "kk" ? "Референс суретін жүктеу" : "Загрузить референсное изображение"} className="h-10 shrink-0 rounded-none border-foreground/50"><ImagePlus className="size-4" /></Button>
             <Input value={input} onChange={(event) => setInput(event.target.value)} placeholder={t.chat.placeholder} className="h-10 rounded-none text-sm" disabled={chatMutation.isPending} />
             <Button type="submit" size="icon" disabled={chatMutation.isPending || !input.trim()} className="rounded-none text-primary-foreground transition-transform active:scale-95" style={{ backgroundColor: "var(--swiss-yellow)", color: "#000" }}><Send className="size-4" /></Button>
           </form>

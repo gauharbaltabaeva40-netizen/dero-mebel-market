@@ -21,7 +21,6 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
   const navItems = [
     { href: "/", label: t.nav.home },
     { href: "/catalog", label: t.nav.catalog },
-    { href: "/faq", label: t.nav.faq },
   ];
 
   return (
@@ -34,9 +33,9 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
             <span className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full border border-foreground/20 bg-background sm:size-9">
               <img src={LOGO_URL} alt="" className="size-full object-cover" />
             </span>
-            <span className="flex flex-col leading-none select-none">
+            <span className="flex items-baseline gap-1 whitespace-nowrap leading-none select-none">
               <span className="text-[6px] sm:text-[9px] font-black tracking-[0.08em] sm:tracking-[0.16em]" style={{ color: "var(--foreground)", fontFamily: "'Inter', sans-serif" }}>DERO MEBEL</span>
-              <span className="mt-0.5 hidden text-[8px] sm:block sm:text-[9px] font-black tracking-[0.18em]" style={{ color: "var(--swiss-yellow-dark)", fontFamily: "'Inter', sans-serif" }}>MARKET</span>
+              <span className="text-[6px] sm:text-[9px] font-black tracking-[0.08em] sm:tracking-[0.16em]" style={{ color: "var(--swiss-yellow-dark)", fontFamily: "'Inter', sans-serif" }}>MARKET</span>
             </span>
           </Link>
 

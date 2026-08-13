@@ -236,3 +236,15 @@
 - [x] Remove identified demo products from public catalog and chat recommendations (7 known mock records unpublished)
 - [x] Add regression coverage and verify desktop/375 px interactions (TypeScript clean; Vitest 51/51; guided quick-reply, full-screen, and catalog interactions verified)
 - [x] Save checkpoint and deliver the DERO AI and catalog availability update
+
+## Phase 22 — Image discovery, catalog refinement, and brand navigation (user request)
+
+- [x] Audit catalog room/style data, validated Kaspi URLs, existing logo assets, and the customer-image upload path (published catalog currently has kitchen/wardrobe room categories and modern/minimalist/loft styles; 12 product URLs were previously audit-verified for Kaspi; the page head lacks favicon and crawler logo metadata)
+- [x] Confirm a vision-analysis approach for customer reference images that respects the existing zero-cost DERO AI requirement (user chose B: customer-selected style traits, no vision-model calls)
+- [x] Add DERO AI image upload, local preview, and transparent zero-cost matching guidance through room, style, and color selections
+- [x] Add catalog filters for room type and furniture style in KK/RU (room-type labels map to the actual kitchen and wardrobe catalog data; style options are derived from published catalog styles)
+- [x] Restore a direct Kaspi order button only where a product has an audited working product URL
+- [x] Remove the FAQ navigation item and keep the complete DERO MEBEL MARKET wordmark on one line
+- [x] Set the official logo as favicon and add crawler-visible search metadata
+- [x] Add regression coverage and verify desktop/375 px image discovery, filters, ordering, navigation, and metadata (TypeScript clean; Vitest 51/51; local-image preview, zero-cost style prompt, KK/RU room and style filters, audited Kaspi order button, navigation, favicon, and schema metadata verified)
+- [x] Save checkpoint and deliver the image discovery and catalog update
